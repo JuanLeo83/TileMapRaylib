@@ -8,7 +8,6 @@ TestScene::TestScene() {
     tileSet = LoadTexture((assets + "/tileset.png").c_str());
     widthInTiles = std::ceil(GetScreenWidth() / 16.0);
     heightInTiles = std::ceil(GetScreenHeight() / 16.0);
-    std::cout << heightInTiles << std::endl;
 
     player = new Player();
 
@@ -34,30 +33,35 @@ void TestScene::update(float deltaTime) {
         camera.target.x += 100 * deltaTime;
     }
     if (IsKeyDown(KEY_Q)) {
-        camera.zoom -= 0.1f * deltaTime;
+        camera.zoom -= 0.5f * deltaTime;
     }
     if (IsKeyDown(KEY_E)) {
-        camera.zoom += 0.1f * deltaTime;
+        camera.zoom += 0.5f * deltaTime;
     }
 
-    player->update(deltaTime);
+    // player->update(deltaTime);
 }
 
-void TestScene::draw() const {
+void TestScene::draw() {
     BeginMode2D(camera);
 
-    for (int i = 0; i < widthInTiles; ++i) {
-        for (int j = 0; j < heightInTiles; ++j) {
+    for (int row = 0; row < 6; ++row) {
+        for (int col = 0; col < 5; ++col) {
+            const int tileIndex = tiles[row][col];
+            const int tileRow = tileIndex / 12;
+            srcRect.x = static_cast<float>((tileIndex - tileRow * 12) * 16);
+            srcRect.y = static_cast<float>(tileRow * 16);
+
             DrawTextureRec(
                 tileSet,
-                tileRect,
-                {static_cast<float>(i * 16), static_cast<float>(j * 16)},
+                srcRect,
+                {static_cast<float>(col * 16), static_cast<float>(row * 16)},
                 WHITE
             );
         }
     }
 
-    player->draw();
+    // player->draw();
 
     EndMode2D();
 }

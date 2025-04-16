@@ -12,17 +12,25 @@ class TestScene final : public Scene {
     Texture2D tileSet{};
     int widthInTiles;
     int heightInTiles;
-    Rectangle tileRect = { 16 * 2, 16 * 9, 16, 16 };
-    Vector2 tilePosition = { 0, 0 };
+    Rectangle srcRect = { 16 * 2, 16 * 9, 16, 16 };
 
     std::string assets = ASSETS;
 
     Player *player;
+
+    int tiles[6][5] = {
+        {50, 48, 50, 50, 60},
+        {50, 50, 48, 60, 50},
+        {50, 48, 50, 50, 60},
+        {50, 48, 50, 50, 60},
+        {72, 50, 48, 60, 50},
+        {50, 48, 50, 50, 60},
+    };
 
 public:
     TestScene();
 
     void update(float deltaTime) override;
 
-    void draw() const override;
+    void draw() override;
 };
