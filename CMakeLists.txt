@@ -14,6 +14,7 @@ set(ENGINE_HEADERS
         engine/scene/Scene.h
         engine/animation/Animation.h
         engine/animation/Animator.h
+        game/TileMap.h
 )
 
 add_executable(Tileset main.cpp
@@ -27,6 +28,7 @@ add_executable(Tileset main.cpp
         engine/animation/Animation.cpp
         game/Player.cpp
         game/Player.h
+        game/TileMap.cpp
 )
 
 find_library(RAYLIB_LIBRARY
