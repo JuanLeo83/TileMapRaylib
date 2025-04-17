@@ -7,7 +7,7 @@
 #include "TileMap.h"
 
 
-inline std::vector<std::vector<int>> loadMapFromFile(const std::string &fileName, int &mapWidth, int &mapHeight) {
+inline std::vector<std::vector<int> > loadMapFromFile(const std::string &fileName, int &mapWidth, int &mapHeight) {
     std::ifstream file(fileName);
 
     if (!file.is_open()) {
@@ -16,7 +16,7 @@ inline std::vector<std::vector<int>> loadMapFromFile(const std::string &fileName
     }
 
     std::string line;
-    std::vector<std::vector<int>> tiles;
+    std::vector<std::vector<int> > tiles;
 
     while (std::getline(file, line)) {
         if (line.rfind("map_width=", 0) == 0) {
@@ -54,7 +54,7 @@ inline void saveMapToFile(const TileMap &tileMap, const std::string &fileName) {
     file << "map_height=" << tileMap.getTiles().size() << "\n";
     file << "map=\n";
 
-    for (const auto &row : tileMap.getTiles()) {
+    for (const auto &row: tileMap.getTiles()) {
         for (size_t col = 0; col < row.size(); ++col) {
             file << row[col];
             if (col < row.size() - 1) {
@@ -66,24 +66,3 @@ inline void saveMapToFile(const TileMap &tileMap, const std::string &fileName) {
 
     file.close();
 }
-
-// inline void saveMapToFile(const TileMap &tileMap, const std::string &fileName) {
-//     std::ofstream file(fileName);
-//
-//     if (!file.is_open()) {
-//         std::cerr << "Error opening the file for writing." << std::endl;
-//         return;
-//     }
-//
-//     for (const auto &row: tileMap.getTiles()) {
-//         for (size_t col = 0; col < row.size(); ++col) {
-//             file << row[col];
-//             if (col < row.size() - 1) {
-//                 file << ",";
-//             }
-//         }
-//         file << "\n";
-//     }
-//
-//     file.close();
-// }

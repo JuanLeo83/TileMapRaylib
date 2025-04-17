@@ -23,7 +23,7 @@ public:
 
     void draw();
 
-    void loadMap(std::string fileName);
+    void loadMap(const std::string &fileName);
 
     std::vector<std::vector<int>> getTiles() const {
         return tiles;

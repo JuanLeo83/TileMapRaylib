@@ -33,6 +33,6 @@ void TileMap::draw() {
     }
 }
 
-void TileMap::loadMap(std::string fileName) {
-    tiles = loadMapFromFile("../assets/myMap.tm", mapWidthInTiles, mapHeightInTiles);
+void TileMap::loadMap(const std::string &fileName) {
+    tiles = loadMapFromFile(fileName, mapWidthInTiles, mapHeightInTiles);
 }

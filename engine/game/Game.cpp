@@ -21,6 +21,8 @@ void Game::run() const {
 
         gameState->draw();
 
+        DrawFPS(10, GetScreenHeight() - 20);
+
         EndDrawing();
     }
 }
