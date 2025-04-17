@@ -34,8 +34,8 @@ void TileMap::draw() {
     }
 }
 
-std::vector<std::vector<int>> TileMap::loadMapFromFile(const std::string& fileName) {
-    std::vector<std::vector<int>> map;
+std::vector<std::vector<int> > TileMap::loadMapFromFile(const std::string &fileName) {
+    std::vector<std::vector<int> > map;
     std::ifstream file(fileName);
 
     if (!file.is_open()) {
@@ -58,4 +58,25 @@ std::vector<std::vector<int>> TileMap::loadMapFromFile(const std::string& fileNa
 
     file.close();
     return map;
+}
+
+void TileMap::saveMapToFile(const std::string &fileName) const {
+    std::ofstream file(fileName);
+
+    if (!file.is_open()) {
+        std::cerr << "Error opening the file for writing." << std::endl;
+        return;
+    }
+
+    for (const auto &row: tiles) {
+        for (size_t col = 0; col < row.size(); ++col) {
+            file << row[col];
+            if (col < row.size() - 1) {
+                file << ",";
+            }
+        }
+        file << "\n";
+    }
+
+    file.close();
 }

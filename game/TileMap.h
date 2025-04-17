@@ -24,4 +24,6 @@ public:
     explicit TileMap(Texture2D &tileSet, int widthInTiles, int heightInTiles, int tileWidth, int tileHeight);
 
     void draw();
+
+    void saveMapToFile(const std::string& fileName) const;
 };

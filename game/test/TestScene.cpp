@@ -37,6 +37,9 @@ void TestScene::update(float deltaTime) {
     if (IsKeyDown(KEY_E)) {
         camera.zoom += 0.5f * deltaTime;
     }
+    if (IsKeyDown(KEY_ENTER)) {
+        tileMap->saveMapToFile("../assets/savedMap.tm");
+    }
 
     // player->update(deltaTime);
 }
