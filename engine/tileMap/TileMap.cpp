@@ -1,17 +1,14 @@
 #include "TileMap.h"
 
 #include <fstream>
-#include <iostream>
 #include <sstream>
 
 #include "TileMapUtils.h"
 
 TileMap::TileMap(Texture2D &tileSet, const int widthInTiles, const int heightInTiles, const int tileWidth,
                  const int tileHeight) : tileSet(tileSet), widthInTiles(widthInTiles), heightInTiles(heightInTiles),
-                                         tileWidth(tileWidth), tileHeight(tileHeight) {
-    tiles = loadMapFromFile("../assets/myMap.tm");
-    mapWidthInTiles = 5;
-    mapHeightInTiles = 6;
+                                         tileWidth(tileWidth), tileHeight(tileHeight), mapWidthInTiles(0),
+                                         mapHeightInTiles(0) {
     srcRect.width = tileWidth;
     srcRect.height = tileHeight;
 }
@@ -34,4 +31,8 @@ void TileMap::draw() {
             );
         }
     }
+}
+
+void TileMap::loadMap(std::string fileName) {
+    tiles = loadMapFromFile("../assets/myMap.tm", mapWidthInTiles, mapHeightInTiles);
 }

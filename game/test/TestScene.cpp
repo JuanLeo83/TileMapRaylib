@@ -6,6 +6,7 @@
 TestScene::TestScene() {
     tileSet = LoadTexture((assets + "/tileset.png").c_str());
     tileMap = new TileMap(tileSet, 12, 10, 16, 16);
+    tileMap->loadMap("../assets/myMap.tm");
 
     player = new Player();
 
