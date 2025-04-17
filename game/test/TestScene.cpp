@@ -1,8 +1,7 @@
 #include "TestScene.h"
 
-#include <iostream>
-#include <cmath>
 #include <raylib.h>
+#include <tileMap/TileMapUtils.h>
 
 TestScene::TestScene() {
     tileSet = LoadTexture((assets + "/tileset.png").c_str());
@@ -38,7 +37,7 @@ void TestScene::update(float deltaTime) {
         camera.zoom += 0.5f * deltaTime;
     }
     if (IsKeyDown(KEY_ENTER)) {
-        tileMap->saveMapToFile("../assets/savedMap.tm");
+        saveMapToFile(*tileMap, "../assets/savedMap.tm");
     }
 
     // player->update(deltaTime);

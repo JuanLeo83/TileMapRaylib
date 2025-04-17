@@ -14,21 +14,22 @@ set(ENGINE_HEADERS
         engine/scene/Scene.h
         engine/animation/Animation.h
         engine/animation/Animator.h
-        game/TileMap.h
+        engine/tileMap/TileMap.h
+        engine/tileMap/TileMapUtils.h
 )
 
 add_executable(Tileset main.cpp
         engine/game/Game.cpp
+        engine/animation/Animator.cpp
+        engine/animation/Animation.cpp
+        engine/tileMap/TileMap.cpp
         game/test/TestScene.cpp
         game/test/TestScene.h
         game/test/TestSceneType.cpp
         game/test/TestSceneType.h
         game/GameState.cpp
-        engine/animation/Animator.cpp
-        engine/animation/Animation.cpp
         game/Player.cpp
         game/Player.h
-        game/TileMap.cpp
 )
 
 find_library(RAYLIB_LIBRARY

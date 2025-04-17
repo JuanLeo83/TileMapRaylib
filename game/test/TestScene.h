@@ -2,10 +2,10 @@
 
 #include <raylib.h>
 #include <string>
+#include <tileMap/TileMap.h>
 
 #include "scene/Scene.h"
 #include "../Player.h"
-#include "../TileMap.h"
 
 class TestScene final : public Scene {
     Camera2D camera;
