@@ -47,7 +47,7 @@ void TestScene::update(const float deltaTime) {
         }
 
         if (worldPosition.x > tileMap->getPosition().x && worldPosition.x < tileMap->getPosition().x + worldWidth * 16 &&
-            worldPosition.y > tileMap->getPosition().y && worldPosition.y < tileMap->getPosition().yworldHeight * 16) {
+            worldPosition.y > tileMap->getPosition().y && worldPosition.y < tileMap->getPosition().y + worldHeight * 16) {
             const int tileX = (worldPosition.x - tileSet.width) / 16;
             const int tileY = worldPosition.y / 16;
             tileMap->setTile(tileX, tileY, selectedTile);
