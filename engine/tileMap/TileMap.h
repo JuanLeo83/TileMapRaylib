@@ -18,12 +18,22 @@ class TileMap {
 
     const int NO_TILE = -1;
 
+    Vector2 mapPosition = {0, 0};
+
 public:
     explicit TileMap(Texture2D &tileSet, int widthInTiles, int heightInTiles, int tileWidth, int tileHeight);
+
+    Vector2 getPosition() const;
+
+    void setPosition(Vector2 position);
+
+    void initEmptyTiles(int worldWidth, int worldHeight);
 
     void draw();
 
     void loadMap(const std::string &fileName);
+
+    void setTile(float positionX, float positionY, int tileIndex);
 
     std::vector<std::vector<int>> getTiles() const {
         return tiles;

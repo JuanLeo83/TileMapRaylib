@@ -5,7 +5,6 @@
 #include <tileMap/TileMap.h>
 
 #include "scene/Scene.h"
-#include "../Player.h"
 
 class TestScene final : public Scene {
     Camera2D camera;
@@ -14,8 +13,15 @@ class TestScene final : public Scene {
 
     std::string assets = ASSETS;
 
-    Player *player;
     TileMap *tileMap;
+
+    Vector2 mousePosition;
+    Vector2 worldPosition;
+
+    int worldWidth = 20;
+    int worldHeight = 30;
+    int selectedTile = -1;
+    Vector2 selectedTilePosition = {0, 0};
 
 public:
     TestScene();

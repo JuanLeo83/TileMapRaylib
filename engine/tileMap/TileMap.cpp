@@ -13,6 +13,20 @@ TileMap::TileMap(Texture2D &tileSet, const int widthInTiles, const int heightInT
     srcRect.height = tileHeight;
 }
 
+Vector2 TileMap::getPosition() const {
+    return mapPosition;
+}
+
+void TileMap::setPosition(const Vector2 position) {
+    mapPosition = position;
+}
+
+void TileMap::initEmptyTiles(const int worldWidth, const int worldHeight) {
+    mapWidthInTiles = worldWidth;
+    mapHeightInTiles = worldHeight;
+    tiles = std::vector(worldHeight, std::vector(worldWidth, NO_TILE));
+}
+
 void TileMap::draw() {
     for (int row = 0; row < mapHeightInTiles; ++row) {
         for (int col = 0; col < mapWidthInTiles; ++col) {
@@ -26,7 +40,7 @@ void TileMap::draw() {
             DrawTextureRec(
                 tileSet,
                 srcRect,
-                {static_cast<float>(col * tileWidth), static_cast<float>(row * tileHeight)},
+                {mapPosition.x + col * tileWidth, mapPosition.y + row * tileHeight},
                 WHITE
             );
         }
@@ -35,4 +49,13 @@ void TileMap::draw() {
 
 void TileMap::loadMap(const std::string &fileName) {
     tiles = loadMapFromFile(fileName, mapWidthInTiles, mapHeightInTiles);
+}
+
+void TileMap::setTile(const float positionX, const float positionY, const int tileIndex) {
+    const int col = static_cast<int>(positionX);
+    const int row = static_cast<int>(positionY);
+
+    if (row >= 0 && row < mapHeightInTiles && col >= 0 && col < mapWidthInTiles) {
+        tiles[row][col] = tileIndex;
+    }
 }
