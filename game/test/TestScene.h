@@ -7,7 +7,9 @@
 #include "scene/Scene.h"
 
 class TestScene final : public Scene {
-    Camera2D camera;
+    Camera2D cameraTileSelected;
+    Camera2D cameraTileSet;
+    Camera2D cameraMap;
 
     Texture2D tileSet{};
 
@@ -16,7 +18,8 @@ class TestScene final : public Scene {
     TileMap *tileMap;
 
     Vector2 mousePosition;
-    Vector2 worldPosition;
+    Vector2 worldPositionMap;
+    Vector2 worldPositionTileSet;
 
     int worldWidth = 20;
     int worldHeight = 30;
