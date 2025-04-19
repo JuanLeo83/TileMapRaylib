@@ -7,24 +7,38 @@
 #include "scene/Scene.h"
 
 class TestScene final : public Scene {
-    Camera2D cameraTileSelected;
-    Camera2D cameraTileSet;
-    Camera2D cameraMap;
+    const int NO_TILE = -1;
+    Camera2D cameraTileSelected{};
+    Camera2D cameraTileSet{};
+    Camera2D cameraMap{};
 
+    int tileSetZoneWidth;
     Texture2D tileSet{};
+    int tileSetWidthInTiles;
+    int tileSetHeightInTiles;
+    int tileWidth;
+    int tileHeight;
 
     std::string assets = ASSETS;
 
     TileMap *tileMap;
 
-    Vector2 mousePosition;
-    Vector2 worldPositionMap;
-    Vector2 worldPositionTileSet;
+    Vector2 mousePosition{};
+    Vector2 worldPositionMap{};
+    Vector2 worldPositionTileSet{};
 
     int worldWidth = 20;
     int worldHeight = 30;
-    int selectedTile = -1;
+    int selectedTile = NO_TILE;
     Vector2 selectedTilePosition = {0, 0};
+
+    static static void initCamera(Camera2D &camera);
+
+    bool isMouseInsideTileSetZone() const;
+
+    bool isMouseInsideTileMapZone() const;
+
+    bool isMouseInsideTileMap() const;
 
 public:
     TestScene();

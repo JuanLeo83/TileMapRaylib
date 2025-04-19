@@ -3,7 +3,7 @@
 #include <raylib.h>
 #include <tileMap/TileMapUtils.h>
 
-// TODO: seleccionar múltiples tiles a la vez para pintarlos de una vez
+// TODO: seleccionar múltiples tiles a la vez para pintarlos de una vez (ya veremos cómo lo hago)
 // TODO: Modificar en caliente dimensiones del mapa
 // TODO: Modificar en caliente dimensiones del tile
 // TODO: Modificar en caliente el tileset
@@ -12,32 +12,21 @@
 
 TestScene::TestScene() {
     tileSet = LoadTexture((assets + "/tileset.png").c_str());
-    tileMap = new TileMap(tileSet, 12, 10, 16, 16);
-    tileMap->setPosition({static_cast<float>(tileSet.width), 0});
+    tileSetZoneWidth = tileSet.width;
+    tileSetWidthInTiles = 12;
+    tileSetHeightInTiles = 10;
+    tileWidth = 16;
+    tileHeight = 16;
+    tileMap = new TileMap(tileSet, tileSetWidthInTiles, tileSetHeightInTiles, tileWidth, tileHeight);
+    tileMap->setPosition({static_cast<float>(tileSetZoneWidth), 0});
     tileMap->initEmptyTiles(worldWidth, worldHeight);
-    // tileMap->loadMap("../assets/savedMap.tm");
+    tileMap->loadMap("../assets/savedMap.tm");
 
-    cameraMap = {};
-    cameraMap.target.x = 0;
-    cameraMap.target.y = 0;
-    cameraMap.offset.x = 0;
-    cameraMap.offset.y = 0;
-    cameraMap.zoom = 1;
+    initCamera(cameraMap);
+    initCamera(cameraTileSet);
+    initCamera(cameraTileSelected);
 
-    cameraTileSet = {};
-    cameraTileSet.target.x = 0;
-    cameraTileSet.target.y = 0;
-    cameraTileSet.offset.x = 0;
-    cameraTileSet.offset.y = 0;
-    cameraTileSet.zoom = 1;
-
-    cameraTileSelected = {};
-    cameraTileSelected.target.x = 0;
-    cameraTileSelected.target.y = 0;
-    cameraTileSelected.offset.x = 0;
-    cameraTileSelected.offset.y = 0;
-    cameraTileSelected.zoom = 1;
-
+    mousePosition = GetMousePosition();
     worldPositionMap = GetScreenToWorld2D(GetMousePosition(), cameraMap);
     worldPositionTileSet = GetScreenToWorld2D(GetMousePosition(), cameraTileSet);
 
@@ -45,23 +34,23 @@ TestScene::TestScene() {
 }
 
 void TestScene::update(const float deltaTime) {
-    const Vector2 mousePosition = GetMousePosition();
+    mousePosition = GetMousePosition();
     worldPositionMap = GetScreenToWorld2D(mousePosition, cameraMap);
     worldPositionTileSet = GetScreenToWorld2D(GetMousePosition(), cameraTileSet);
 
     // Scroll
-    if (mousePosition.x > 0 && mousePosition.x < tileSet.width) {
+    if (isMouseInsideTileSetZone()) {
         cameraTileSet.zoom += GetMouseWheelMoveV().y * deltaTime;
-    } else if (mousePosition.x > tileSet.width && mousePosition.x < GetScreenWidth()) {
+    } else if (isMouseInsideTileMapZone()) {
         cameraMap.zoom += GetMouseWheelMoveV().y * deltaTime;
     }
 
     // Camera move
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-        if (mousePosition.x > 0 && mousePosition.x < tileSet.width) {
+        if (isMouseInsideTileSetZone()) {
             cameraTileSet.target.x -= GetMouseDelta().x;
             cameraTileSet.target.y -= GetMouseDelta().y;
-        } else if (mousePosition.x > tileSet.width && mousePosition.x < GetScreenWidth()) {
+        } else if (isMouseInsideTileMapZone()) {
             cameraMap.target.x -= GetMouseDelta().x;
             cameraMap.target.y -= GetMouseDelta().y;
         }
@@ -74,25 +63,20 @@ void TestScene::update(const float deltaTime) {
 
     // Draw and select
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-        if (mousePosition.x > 0 && mousePosition.x < tileSet.width &&
-            mousePosition.y > 0 && mousePosition.y < GetScreenHeight()) {
-            const int tileX = worldPositionTileSet.x / 16;
-            const int tileY = worldPositionTileSet.y / 16;
-            selectedTile = tileY * (tileSet.width / 16) + tileX;
-            selectedTilePosition.x = tileX * 16;
-            selectedTilePosition.y = tileY * 16;
+        if (isMouseInsideTileSetZone() &&
+            mousePosition.y > 0 && mousePosition.y < static_cast<float>(GetScreenHeight())) {
+            const float tileX = worldPositionTileSet.x / static_cast<float>(tileWidth);
+            const float tileY = worldPositionTileSet.y / static_cast<float>(tileHeight);
+            selectedTile = static_cast<int>(tileY * static_cast<float>(tileSetZoneWidth / tileWidth) + tileX);
+            selectedTilePosition.x = tileX * static_cast<float>(tileWidth);
+            selectedTilePosition.y = tileY * static_cast<float>(tileHeight);
         }
 
-        if (worldPositionMap.x > tileMap->getPosition().x && worldPositionMap.x < tileMap->getPosition().x + worldWidth
-            * 16
-            &&
-            worldPositionMap.y > tileMap->getPosition().y && worldPositionMap.y < tileMap->getPosition().y + worldHeight
-            *
-            16) {
-            const int tileX = (worldPositionMap.x - tileSet.width) / 16;
-            const int tileY = worldPositionMap.y / 16;
+        if (isMouseInsideTileMap()) {
+            const float tileX = (worldPositionMap.x - static_cast<float>(tileSetZoneWidth)) / static_cast<float>(tileWidth);
+            const float tileY = worldPositionMap.y / static_cast<float>(tileHeight);
             if (IsKeyDown(KEY_BACKSPACE)) {
-                tileMap->setTile(tileX, tileY, -1);
+                tileMap->setTile(tileX, tileY, NO_TILE);
             } else {
                 tileMap->setTile(tileX, tileY, selectedTile);
             }
@@ -101,52 +85,83 @@ void TestScene::update(const float deltaTime) {
 }
 
 void TestScene::draw() {
-    BeginScissorMode(tileSet.width, 0, GetScreenWidth(), GetScreenHeight());
-        BeginMode2D(cameraMap);
-            tileMap->draw();
+    BeginScissorMode(tileSetZoneWidth, 0, GetScreenWidth(), GetScreenHeight());
+    BeginMode2D(cameraMap);
+    tileMap->draw();
 
-            for (int v = 0; v <= worldWidth; v++) {
-                DrawLine(tileSet.width + v * 16, 0, tileSet.width + v * 16, worldHeight * 16, GRAY);
-            }
-            for (int h = 0; h <= worldHeight; h++) {
-                DrawLine(tileSet.width, h * 16, tileSet.width + worldWidth * 16, h * 16, LIGHTGRAY);
-            }
-        EndMode2D();
+    for (int v = 0; v <= worldWidth; v++) {
+        DrawLine(tileSetZoneWidth + v * tileWidth, 0, tileSetZoneWidth + v * tileWidth, worldHeight * tileHeight, GRAY);
+    }
+    for (int h = 0; h <= worldHeight; h++) {
+        DrawLine(tileSetZoneWidth, h * tileHeight, tileSetZoneWidth + worldWidth * tileWidth, h * tileHeight,
+                 LIGHTGRAY);
+    }
+    EndMode2D();
     EndScissorMode();
 
-    BeginScissorMode(0, 0, tileSet.width, GetScreenHeight() / 2);
-        DrawRectangle(0, 0, tileSet.width, GetScreenHeight(), BLACK);
-        BeginMode2D(cameraTileSet);
-            DrawTexture(tileSet, 0, 0, WHITE);
-            for (int v = 0; v < tileSet.width; v += 16) {
-                DrawLine(v, 0, v, tileSet.height, WHITE);
-            }
-            for (int h = 0; h < tileSet.height; h += 16) {
-                DrawLine(0, h, tileSet.width, h, WHITE);
-            }
+    BeginScissorMode(0, 0, tileSetZoneWidth, GetScreenHeight() / 2);
+    DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight(), BLACK);
+    BeginMode2D(cameraTileSet);
+    DrawTexture(tileSet, 0, 0, WHITE);
+    for (int v = 0; v < tileSetZoneWidth; v += tileWidth) {
+        DrawLine(v, 0, v, tileSet.height, WHITE);
+    }
+    for (int h = 0; h < tileSet.height; h += tileHeight) {
+        DrawLine(0, h, tileSetZoneWidth, h, WHITE);
+    }
 
-            DrawRectangleLines(selectedTilePosition.x, selectedTilePosition.y, 16, 16, LIME);
-        EndMode2D();
+    DrawRectangleLines(static_cast<int>(selectedTilePosition.x), static_cast<int>(selectedTilePosition.y), tileWidth,
+                       tileHeight, LIME);
+    EndMode2D();
     EndScissorMode();
 
-    BeginScissorMode(0, GetScreenHeight() / 2, tileSet.width, GetScreenHeight() / 2);
-        BeginMode2D(cameraTileSelected);
-            DrawRectangle(0, 0, tileSet.width, GetScreenHeight(), BLACK);
-            DrawTexturePro(tileSet,
-                (Rectangle){
-                       static_cast<float>(selectedTile % (tileSet.width / 16) * 16),
-                       static_cast<float>(selectedTile / (tileSet.width / 16) * 16), 16, 16
+    BeginScissorMode(0, GetScreenHeight() / 2, tileSetZoneWidth, GetScreenHeight() / 2);
+    BeginMode2D(cameraTileSelected);
+    DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight(), BLACK);
+    DrawTexturePro(tileSet,
+                   (Rectangle){
+                       static_cast<float>(selectedTile % (tileSetZoneWidth / tileWidth) * tileWidth),
+                       static_cast<float>(selectedTile / (tileSetZoneWidth / tileHeight) * tileHeight),
+                       static_cast<float>(tileWidth),
+                       static_cast<float>(tileHeight)
                    },
                    {
-                       static_cast<float>(tileSet.width / 2 - 16),
+                       static_cast<float>(tileSetZoneWidth / 2 - tileWidth),
                        static_cast<float>(GetScreenHeight() / 2 + 15),
-                           32, 32
+                       32, 32
                    },
                    {0, 0}, 0,
                    WHITE);
-        EndMode2D();
+    EndMode2D();
     EndScissorMode();
 
-    DrawRectangle(tileSet.width - 1, 0, 3, GetScreenHeight(), WHITE);
-    DrawRectangle(0, GetScreenHeight() / 2 - 1, tileSet.width, 3, WHITE);
+    DrawRectangle(tileSetZoneWidth - 1, 0, 3, GetScreenHeight(), WHITE);
+    DrawRectangle(0, GetScreenHeight() / 2 - 1, tileSetZoneWidth, 3, WHITE);
+}
+
+void TestScene::initCamera(Camera2D &camera) {
+    camera = {};
+    camera.target.x = 0;
+    camera.target.y = 0;
+    camera.offset.x = 0;
+    camera.offset.y = 0;
+    camera.zoom = 1;
+}
+
+bool TestScene::isMouseInsideTileSetZone() const {
+    return mousePosition.x > 0 && mousePosition.x < static_cast<float>(tileSetZoneWidth);
+}
+
+bool TestScene::isMouseInsideTileMapZone() const {
+    return mousePosition.x > static_cast<float>(tileSetZoneWidth) && mousePosition.x < static_cast<float>(
+               GetScreenWidth());
+}
+
+
+bool TestScene::isMouseInsideTileMap() const {
+    return worldPositionMap.x > tileMap->getPosition().x && worldPositionMap.x < tileMap->getPosition().x +
+           static_cast<float>(worldWidth * tileWidth)
+           &&
+           worldPositionMap.y > tileMap->getPosition().y && worldPositionMap.y < tileMap->getPosition().y +
+           static_cast<float>(worldHeight * tileHeight);
 }
