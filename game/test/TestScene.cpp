@@ -4,9 +4,9 @@
 #include <tileMap/TileMapUtils.h>
 
 // TODO: seleccionar múltiples tiles a la vez para pintarlos de una vez
-// TODO: Borrar tile del mapa
 // TODO: Modificar en caliente dimensiones del mapa
 // TODO: Modificar en caliente dimensiones del tile
+// TODO: Modificar en caliente el tileset
 // TODO: Añadir capas de tiles
 // TODO: Autotiling
 
@@ -91,7 +91,11 @@ void TestScene::update(const float deltaTime) {
             16) {
             const int tileX = (worldPositionMap.x - tileSet.width) / 16;
             const int tileY = worldPositionMap.y / 16;
-            tileMap->setTile(tileX, tileY, selectedTile);
+            if (IsKeyDown(KEY_BACKSPACE)) {
+                tileMap->setTile(tileX, tileY, -1);
+            } else {
+                tileMap->setTile(tileX, tileY, selectedTile);
+            }
         }
     }
 }
