@@ -36,6 +36,8 @@ class TestScene final : public Scene {
 
     bool isMouseInsideTileSetZone() const;
 
+    bool isMouseInsideTileSet() const;
+
     bool isMouseInsideTileMapZone() const;
 
     bool isMouseInsideTileMap() const;

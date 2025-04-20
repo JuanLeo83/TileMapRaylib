@@ -62,26 +62,25 @@ void TestScene::update(const float deltaTime) {
     }
 
     // Draw and select
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-        if (isMouseInsideTileSetZone() &&
-            mousePosition.y > 0 && mousePosition.y < static_cast<float>(GetScreenHeight())) {
-            const float tileX = worldPositionTileSet.x / static_cast<float>(tileWidth);
-            const float tileY = worldPositionTileSet.y / static_cast<float>(tileHeight);
-            selectedTile = static_cast<int>(tileY * static_cast<float>(tileSetZoneWidth / tileWidth) + tileX);
-            selectedTilePosition.x = tileX * static_cast<float>(tileWidth);
-            selectedTilePosition.y = tileY * static_cast<float>(tileHeight);
-        }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && isMouseInsideTileSet()) {
+        const int tileX = worldPositionTileSet.x / tileWidth;
+        const int tileY = worldPositionTileSet.y / tileHeight;
+        selectedTile = tileY * tileSetZoneWidth / tileWidth + tileX;
+        selectedTilePosition.x = tileX * tileWidth;
+        selectedTilePosition.y = tileY * tileHeight;
+    }
 
-        if (isMouseInsideTileMap()) {
-            const float tileX = (worldPositionMap.x - static_cast<float>(tileSetZoneWidth)) / static_cast<float>(tileWidth);
-            const float tileY = worldPositionMap.y / static_cast<float>(tileHeight);
-            if (IsKeyDown(KEY_BACKSPACE)) {
-                tileMap->setTile(tileX, tileY, NO_TILE);
-            } else {
-                tileMap->setTile(tileX, tileY, selectedTile);
-            }
+
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && isMouseInsideTileMap()) {
+        const float tileX = (worldPositionMap.x - static_cast<float>(tileSetZoneWidth)) / static_cast<float>(tileWidth);
+        const float tileY = worldPositionMap.y / static_cast<float>(tileHeight);
+        if (IsKeyDown(KEY_BACKSPACE)) {
+            tileMap->setTile(tileX, tileY, NO_TILE);
+        } else {
+            tileMap->setTile(tileX, tileY, selectedTile);
         }
     }
+
 }
 
 void TestScene::draw() {
@@ -149,7 +148,13 @@ void TestScene::initCamera(Camera2D &camera) {
 }
 
 bool TestScene::isMouseInsideTileSetZone() const {
-    return mousePosition.x > 0 && mousePosition.x < static_cast<float>(tileSetZoneWidth);
+    return mousePosition.x > 0 && mousePosition.x < static_cast<float>(tileSetZoneWidth) &&
+           mousePosition.y > 0 && mousePosition.y < static_cast<float>(GetScreenHeight()) / 2;
+}
+
+bool TestScene::isMouseInsideTileSet() const {
+    return worldPositionTileSet.x > 0 && worldPositionTileSet.x < tileSet.width && mousePosition.x < tileSetZoneWidth &&
+           worldPositionTileSet.y > 0 && worldPositionTileSet.y < tileSet.height && mousePosition.y < GetScreenHeight() / 2;
 }
 
 bool TestScene::isMouseInsideTileMapZone() const {
