@@ -107,10 +107,10 @@ void TestScene::draw() {
     DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight(), BLACK);
     BeginMode2D(cameraTileSet);
     DrawTexture(tileSet, 0, 0, WHITE);
-    for (int v = 0; v < tileSet.width; v += tileWidth) {
+    for (int v = 0; v <= tileSet.width; v += tileWidth) {
         DrawLine(v, 0, v, tileSet.height, WHITE);
     }
-    for (int h = 0; h < tileSet.height; h += tileHeight) {
+    for (int h = 0; h <= tileSet.height; h += tileHeight) {
         DrawLine(0, h, tileSet.width, h, WHITE);
     }
 
@@ -125,8 +125,8 @@ void TestScene::draw() {
     DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight(), BLACK);
     DrawTexturePro(tileSet,
                    (Rectangle){
-                       static_cast<float>(selectedTile % (tileSetZoneWidth / tileWidth) * tileWidth),
-                       static_cast<float>(selectedTile / (tileSetZoneWidth / tileHeight) * tileHeight),
+                       selectedTilePosition.x,
+                       selectedTilePosition.y,
                        static_cast<float>(tileWidth),
                        static_cast<float>(tileHeight)
                    },
@@ -155,7 +155,6 @@ void TestScene::draw() {
         if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
             if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
                 tileSetPath = ImGuiFileDialog::Instance()->GetFilePathName();
-                tileSet = LoadTexture(tileSetPath.c_str());
                 tileMap->setTileSetPath(tileSetPath);
             }
 

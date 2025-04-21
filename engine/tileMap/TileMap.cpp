@@ -95,6 +95,9 @@ void TileMap::setMapHeight(const int &value) {
 
 void TileMap::setTileSetPath(const std::string &value) {
     tileSetPath = value;
+    tileSet = LoadTexture(tileSetPath.c_str());
+    widthInTiles = tileSet.width / tileWidth;
+    heightInTiles = tileSet.height / tileHeight;
 }
 
 void TileMap::setTileWidth(const int &value) {
@@ -102,6 +105,7 @@ void TileMap::setTileWidth(const int &value) {
 
     tileWidth = value;
     srcRect.width = tileWidth;
+    widthInTiles = tileSet.width / tileWidth;
 }
 
 void TileMap::setTileHeight(const int &value) {
@@ -109,6 +113,7 @@ void TileMap::setTileHeight(const int &value) {
 
     tileHeight = value;
     srcRect.height = tileHeight;
+    heightInTiles = tileSet.height / tileHeight;
 }
 
 void TileMap::updateDimens(const int &mapWidth, const int &mapHeight, const int &tileWidth, const int &tileHeight) {
