@@ -47,8 +47,8 @@ void TileMap::draw() {
     }
 }
 
-void TileMap::loadMap(const std::string &fileName, int &mapWidth, int &mapHeight) {
-    tiles = loadMapFromFile(fileName, mapWidthInTiles, mapHeightInTiles);
+void TileMap::loadMap(const std::string &fileName, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight) {
+    tiles = loadMapFromFile(fileName, mapWidthInTiles, mapHeightInTiles, tileWidth, tileHeight);
     mapWidth = mapWidthInTiles;
     mapHeight = mapHeightInTiles;
 }
@@ -62,7 +62,7 @@ void TileMap::setTile(const float positionX, const float positionY, const int ti
     }
 }
 
-void TileMap::setTileWidth(const int &value) {
+void TileMap::setMapWidth(const int &value) {
     if (value == mapWidthInTiles) return;
 
     if (mapWidthInTiles < value) {
@@ -78,7 +78,7 @@ void TileMap::setTileWidth(const int &value) {
     mapWidthInTiles = value;
 }
 
-void TileMap::setTileHeight(const int &value) {
+void TileMap::setMapHeight(const int &value) {
     if (value == mapHeightInTiles) return;
 
     if (mapHeightInTiles < value) {
@@ -88,4 +88,25 @@ void TileMap::setTileHeight(const int &value) {
     }
 
     mapHeightInTiles = value;
+}
+
+void TileMap::setTileWidth(const int &value) {
+    if (value == tileWidth) return;
+
+    tileWidth = value;
+    srcRect.width = tileWidth;
+}
+
+void TileMap::setTileHeight(const int &value) {
+    if (value == tileHeight) return;
+
+    tileHeight = value;
+    srcRect.height = tileHeight;
+}
+
+void TileMap::updateDimens(const int &mapWidth, const int &mapHeight, const int &tileWidth, const int &tileHeight) {
+    setMapWidth(mapWidth);
+    setMapHeight(mapHeight);
+    setTileWidth(tileWidth);
+    setTileHeight(tileHeight);
 }

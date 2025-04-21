@@ -6,14 +6,13 @@
 #include "imgui.h"
 
 // TODO: seleccionar múltiples tiles a la vez para pintarlos de una vez (ya veremos cómo lo hago)
-// TODO: Modificar en caliente dimensiones del tile
 // TODO: Modificar en caliente el tileset
 // TODO: Añadir capas de tiles
 // TODO: Autotiling
 
 TestScene::TestScene() {
     tileSet = LoadTexture((assets + "/tileset.png").c_str());
-    tileSetZoneWidth = tileSet.width;
+    tileSetZoneWidth = 200;
     tileSetWidthInTiles = 12;
     tileSetHeightInTiles = 10;
     tileWidth = 16;
@@ -21,7 +20,7 @@ TestScene::TestScene() {
     tileMap = new TileMap(tileSet, tileSetWidthInTiles, tileSetHeightInTiles, tileWidth, tileHeight);
     tileMap->setPosition({static_cast<float>(tileSetZoneWidth), 0});
     tileMap->initEmptyTiles(worldWidth, worldHeight);
-    tileMap->loadMap("../assets/savedMap.tm", worldWidth, worldHeight);
+    tileMap->loadMap("../assets/savedMap.tm", worldWidth, worldHeight, tileWidth, tileHeight);
 
     initCamera(cameraMap);
     initCamera(cameraTileSet);
@@ -39,8 +38,7 @@ void TestScene::update(const float deltaTime) {
     worldPositionMap = GetScreenToWorld2D(mousePosition, cameraMap);
     worldPositionTileSet = GetScreenToWorld2D(GetMousePosition(), cameraTileSet);
 
-    tileMap->setTileWidth(worldWidth);
-    tileMap->setTileHeight(worldHeight);
+    tileMap->updateDimens(worldWidth, worldHeight, tileWidth, tileHeight);
 
     // Scroll
     if (isMouseInsideTileSetZone()) {
@@ -61,19 +59,20 @@ void TestScene::update(const float deltaTime) {
     }
 
     // Save
-    if (IsKeyDown(KEY_ENTER)) {
-        saveMapToFile(*tileMap, "../assets/savedMap.tm");
+    if ((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_S)) {
+        save();
     }
 
-    // Draw and select
+    // Select tile
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && isMouseInsideTileSet()) {
         const int tileX = worldPositionTileSet.x / tileWidth;
         const int tileY = worldPositionTileSet.y / tileHeight;
-        selectedTile = tileY * tileSetZoneWidth / tileWidth + tileX;
+        selectedTile = tileY * tileSet.width / tileWidth + tileX;
         selectedTilePosition.x = tileX * tileWidth;
         selectedTilePosition.y = tileY * tileHeight;
     }
 
+    // Draw tile
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && isMouseInsideTileMap()) {
         const float tileX = (worldPositionMap.x - static_cast<float>(tileSetZoneWidth)) / static_cast<float>(tileWidth);
         const float tileY = worldPositionMap.y / static_cast<float>(tileHeight);
@@ -87,6 +86,7 @@ void TestScene::update(const float deltaTime) {
 }
 
 void TestScene::draw() {
+    // Map
     BeginScissorMode(tileSetZoneWidth, 0, GetScreenWidth(), GetScreenHeight());
     BeginMode2D(cameraMap);
     tileMap->draw();
@@ -101,15 +101,16 @@ void TestScene::draw() {
     EndMode2D();
     EndScissorMode();
 
+    // TileSet
     BeginScissorMode(0, 0, tileSetZoneWidth, GetScreenHeight() / 2);
     DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight(), BLACK);
     BeginMode2D(cameraTileSet);
     DrawTexture(tileSet, 0, 0, WHITE);
-    for (int v = 0; v < tileSetZoneWidth; v += tileWidth) {
+    for (int v = 0; v < tileSet.width; v += tileWidth) {
         DrawLine(v, 0, v, tileSet.height, WHITE);
     }
     for (int h = 0; h < tileSet.height; h += tileHeight) {
-        DrawLine(0, h, tileSetZoneWidth, h, WHITE);
+        DrawLine(0, h, tileSet.width, h, WHITE);
     }
 
     DrawRectangleLines(static_cast<int>(selectedTilePosition.x), static_cast<int>(selectedTilePosition.y), tileWidth,
@@ -117,6 +118,7 @@ void TestScene::draw() {
     EndMode2D();
     EndScissorMode();
 
+    // Selected tile
     BeginScissorMode(0, GetScreenHeight() / 2, tileSetZoneWidth, GetScreenHeight() / 2);
     BeginMode2D(cameraTileSelected);
     DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight(), BLACK);
@@ -142,9 +144,16 @@ void TestScene::draw() {
 
     rlImGuiBegin();
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Once);
-    if (ImGui::Begin("Map size")) {
+    if (ImGui::Begin("Dimensions")) {
         ImGui::InputInt("Map width", &worldWidth);
         ImGui::InputInt("Map height", &worldHeight);
+
+        ImGui::InputInt("Tile width", &tileWidth);
+        ImGui::InputInt("Tile height", &tileHeight);
+
+        if (ImGui::Button("Save")) {
+            save();
+        }
     }
     ImGui::End();
     rlImGuiEnd();
@@ -181,4 +190,8 @@ bool TestScene::isMouseInsideTileMap() const {
            &&
            worldPositionMap.y > tileMap->getPosition().y && worldPositionMap.y < tileMap->getPosition().y +
            static_cast<float>(worldHeight * tileHeight);
+}
+
+void TestScene::save() const {
+    saveMapToFile(*tileMap, "../assets/savedMap.tm");
 }
