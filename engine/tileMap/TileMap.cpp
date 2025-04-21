@@ -47,8 +47,10 @@ void TileMap::draw() {
     }
 }
 
-void TileMap::loadMap(const std::string &fileName) {
+void TileMap::loadMap(const std::string &fileName, int &mapWidth, int &mapHeight) {
     tiles = loadMapFromFile(fileName, mapWidthInTiles, mapHeightInTiles);
+    mapWidth = mapWidthInTiles;
+    mapHeight = mapHeightInTiles;
 }
 
 void TileMap::setTile(const float positionX, const float positionY, const int tileIndex) {
@@ -58,4 +60,32 @@ void TileMap::setTile(const float positionX, const float positionY, const int ti
     if (row >= 0 && row < mapHeightInTiles && col >= 0 && col < mapWidthInTiles) {
         tiles[row][col] = tileIndex;
     }
+}
+
+void TileMap::setTileWidth(const int &value) {
+    if (value == mapWidthInTiles) return;
+
+    if (mapWidthInTiles < value) {
+        for (auto &row : tiles) {
+            row.resize(value, NO_TILE);
+        }
+    } else {
+        for (auto &row : tiles) {
+            row.resize(value);
+        }
+    }
+
+    mapWidthInTiles = value;
+}
+
+void TileMap::setTileHeight(const int &value) {
+    if (value == mapHeightInTiles) return;
+
+    if (mapHeightInTiles < value) {
+        tiles.resize(value, std::vector(mapWidthInTiles, NO_TILE));
+    } else {
+        tiles.resize(value);
+    }
+
+    mapHeightInTiles = value;
 }

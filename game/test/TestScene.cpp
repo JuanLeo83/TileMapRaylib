@@ -6,7 +6,6 @@
 #include "imgui.h"
 
 // TODO: seleccionar múltiples tiles a la vez para pintarlos de una vez (ya veremos cómo lo hago)
-// TODO: Modificar en caliente dimensiones del mapa
 // TODO: Modificar en caliente dimensiones del tile
 // TODO: Modificar en caliente el tileset
 // TODO: Añadir capas de tiles
@@ -22,7 +21,7 @@ TestScene::TestScene() {
     tileMap = new TileMap(tileSet, tileSetWidthInTiles, tileSetHeightInTiles, tileWidth, tileHeight);
     tileMap->setPosition({static_cast<float>(tileSetZoneWidth), 0});
     tileMap->initEmptyTiles(worldWidth, worldHeight);
-    tileMap->loadMap("../assets/savedMap.tm");
+    tileMap->loadMap("../assets/savedMap.tm", worldWidth, worldHeight);
 
     initCamera(cameraMap);
     initCamera(cameraTileSet);
@@ -39,6 +38,9 @@ void TestScene::update(const float deltaTime) {
     mousePosition = GetMousePosition();
     worldPositionMap = GetScreenToWorld2D(mousePosition, cameraMap);
     worldPositionTileSet = GetScreenToWorld2D(GetMousePosition(), cameraTileSet);
+
+    tileMap->setTileWidth(worldWidth);
+    tileMap->setTileHeight(worldHeight);
 
     // Scroll
     if (isMouseInsideTileSetZone()) {
@@ -71,7 +73,6 @@ void TestScene::update(const float deltaTime) {
         selectedTilePosition.x = tileX * tileWidth;
         selectedTilePosition.y = tileY * tileHeight;
     }
-
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && isMouseInsideTileMap()) {
         const float tileX = (worldPositionMap.x - static_cast<float>(tileSetZoneWidth)) / static_cast<float>(tileWidth);
@@ -141,8 +142,9 @@ void TestScene::draw() {
 
     rlImGuiBegin();
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Once);
-    if (ImGui::Begin("Editor")) {
-        ImGui::Text("Hola desde ImGui!");
+    if (ImGui::Begin("Map size")) {
+        ImGui::InputInt("Map width", &worldWidth);
+        ImGui::InputInt("Map height", &worldHeight);
     }
     ImGui::End();
     rlImGuiEnd();

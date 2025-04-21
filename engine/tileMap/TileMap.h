@@ -31,9 +31,13 @@ public:
 
     void draw();
 
-    void loadMap(const std::string &fileName);
+    void loadMap(const std::string &fileName, int &mapWidth, int &mapHeight);
 
     void setTile(float positionX, float positionY, int tileIndex);
+
+    void setTileWidth(const int &value);
+
+    void setTileHeight(const int &value);
 
     std::vector<std::vector<int>> getTiles() const {
         return tiles;

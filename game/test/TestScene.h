@@ -27,8 +27,8 @@ class TestScene final : public Scene {
     Vector2 worldPositionMap{};
     Vector2 worldPositionTileSet{};
 
-    int worldWidth = 20;
-    int worldHeight = 30;
+    int worldWidth = 0;
+    int worldHeight = 0;
     int selectedTile = NO_TILE;
     Vector2 selectedTilePosition = {0, 0};
 
