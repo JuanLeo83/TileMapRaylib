@@ -50,7 +50,7 @@ void TestScene::update(const float deltaTime) {
     }
 
     // Camera move
-    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) || IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
         if (isMouseInsideTileSetZone()) {
             cameraTileSet.target.x -= GetMouseDelta().x;
             cameraTileSet.target.y -= GetMouseDelta().y;
