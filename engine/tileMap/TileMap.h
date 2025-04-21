@@ -2,8 +2,10 @@
 
 #include <raylib.h>
 #include <vector>
+#include <string>
 
 class TileMap {
+    std::string &tileSetPath;
     Texture2D &tileSet;
     int widthInTiles;
     int heightInTiles;
@@ -21,7 +23,7 @@ class TileMap {
     Vector2 mapPosition = {0, 0};
 
 public:
-    explicit TileMap(Texture2D &tileSet, int widthInTiles, int heightInTiles, int tileWidth, int tileHeight);
+    explicit TileMap(std::string &tileSetPath, Texture2D &tileSet, int widthInTiles, int heightInTiles, int tileWidth, int tileHeight);
 
     Vector2 getPosition() const;
 
@@ -38,6 +40,12 @@ public:
     void setMapWidth(const int &value);
 
     void setMapHeight(const int &value);
+
+    std::string getTileSetPath() const {
+        return tileSetPath;
+    }
+
+    void setTileSetPath(const std::string &value);
 
     int getTileWidth() const {
         return tileWidth;

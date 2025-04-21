@@ -7,7 +7,7 @@
 #include "TileMap.h"
 
 
-inline std::vector<std::vector<int> > loadMapFromFile(const std::string &fileName, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight) {
+inline std::vector<std::vector<int> > loadMapFromFile(const std::string &fileName, std::string &tileSetPath, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight) {
     std::ifstream file(fileName);
 
     if (!file.is_open()) {
@@ -19,7 +19,9 @@ inline std::vector<std::vector<int> > loadMapFromFile(const std::string &fileNam
     std::vector<std::vector<int> > tiles;
 
     while (std::getline(file, line)) {
-        if (line.rfind("map_width=", 0) == 0) {
+        if (line.rfind("tileSetPath=", 0) == 0) {
+            tileSetPath = line.substr(12);
+        } if (line.rfind("map_width=", 0) == 0) {
             mapWidth = std::stoi(line.substr(10));
         } else if (line.rfind("map_height=", 0) == 0) {
             mapHeight = std::stoi(line.substr(11));
@@ -54,6 +56,7 @@ inline void saveMapToFile(const TileMap &tileMap, const std::string &fileName) {
         return;
     }
 
+    file << "tileSetPath=" << tileMap.getTileSetPath() << "\n";
     file << "map_width=" << tileMap.getTiles()[0].size() << "\n";
     file << "map_height=" << tileMap.getTiles().size() << "\n";
     file << "tile_width=" << tileMap.getTileWidth() << "\n";

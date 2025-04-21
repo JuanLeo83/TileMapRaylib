@@ -5,10 +5,12 @@
 
 #include "TileMapUtils.h"
 
-TileMap::TileMap(Texture2D &tileSet, const int widthInTiles, const int heightInTiles, const int tileWidth,
-                 const int tileHeight) : tileSet(tileSet), widthInTiles(widthInTiles), heightInTiles(heightInTiles),
-                                         tileWidth(tileWidth), tileHeight(tileHeight), mapWidthInTiles(0),
-                                         mapHeightInTiles(0) {
+TileMap::TileMap(std::string &tileSetPath, Texture2D &tileSet, const int widthInTiles, const int heightInTiles,
+                 const int tileWidth,
+                 const int tileHeight) : tileSetPath(tileSetPath), tileSet(tileSet),
+                                         widthInTiles(widthInTiles), heightInTiles(heightInTiles),
+                                         tileWidth(tileWidth), tileHeight(tileHeight),
+                                         mapWidthInTiles(0), mapHeightInTiles(0) {
     srcRect.width = tileWidth;
     srcRect.height = tileHeight;
 }
@@ -48,9 +50,10 @@ void TileMap::draw() {
 }
 
 void TileMap::loadMap(const std::string &fileName, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight) {
-    tiles = loadMapFromFile(fileName, mapWidthInTiles, mapHeightInTiles, tileWidth, tileHeight);
+    tiles = loadMapFromFile(fileName, tileSetPath, mapWidthInTiles, mapHeightInTiles, tileWidth, tileHeight);
     mapWidth = mapWidthInTiles;
     mapHeight = mapHeightInTiles;
+    tileSet = LoadTexture(tileSetPath.c_str());
 }
 
 void TileMap::setTile(const float positionX, const float positionY, const int tileIndex) {
@@ -66,11 +69,11 @@ void TileMap::setMapWidth(const int &value) {
     if (value == mapWidthInTiles) return;
 
     if (mapWidthInTiles < value) {
-        for (auto &row : tiles) {
+        for (auto &row: tiles) {
             row.resize(value, NO_TILE);
         }
     } else {
-        for (auto &row : tiles) {
+        for (auto &row: tiles) {
             row.resize(value);
         }
     }
@@ -88,6 +91,10 @@ void TileMap::setMapHeight(const int &value) {
     }
 
     mapHeightInTiles = value;
+}
+
+void TileMap::setTileSetPath(const std::string &value) {
+    tileSetPath = value;
 }
 
 void TileMap::setTileWidth(const int &value) {

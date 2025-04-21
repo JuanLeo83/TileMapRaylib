@@ -7,19 +7,20 @@
 #include "scene/Scene.h"
 
 class TestScene final : public Scene {
+    std::string assets = ASSETS;
     const int NO_TILE = -1;
     Camera2D cameraTileSelected{};
     Camera2D cameraTileSet{};
     Camera2D cameraMap{};
 
-    int tileSetZoneWidth;
+    const int tileSetZoneWidth = 200;
+    std::string tileSetPath = assets + "/tileset.png";
     Texture2D tileSet{};
     int tileSetWidthInTiles;
     int tileSetHeightInTiles;
     int tileWidth;
     int tileHeight;
 
-    std::string assets = ASSETS;
 
     TileMap *tileMap;
 

@@ -38,6 +38,15 @@ target_include_directories(imgui PUBLIC
         ${imgui_SOURCE_DIR}/backends
 )
 
+add_library(ImGuiFileDialog STATIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/libs/ImGuiFileDialog/ImGuiFileDialog.cpp
+)
+
+target_include_directories(ImGuiFileDialog PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}
+)
+
 target_link_libraries(imgui PUBLIC glfw OpenGL::GL)
 
 set(ENGINE_HEADERS
@@ -85,6 +94,7 @@ target_include_directories(Tileset PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/engine
         ${RAYLIB_INCLUDE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/libs/rlImGui
+        ${CMAKE_CURRENT_SOURCE_DIR}/libs/ImGuiFileDialog
 )
 
 target_link_libraries(Tileset PRIVATE
@@ -94,6 +104,7 @@ target_link_libraries(Tileset PRIVATE
         "-framework Cocoa"
         "-framework CoreVideo"
         imgui
+        ImGuiFileDialog
 )
 
 target_compile_features(Tileset PRIVATE cxx_std_17)

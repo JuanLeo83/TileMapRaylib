@@ -4,6 +4,7 @@
 #include <tileMap/TileMapUtils.h>
 #include "rlImGui.h"
 #include "imgui.h"
+#include "ImGuiFileDialog.h"
 
 // TODO: seleccionar múltiples tiles a la vez para pintarlos de una vez (ya veremos cómo lo hago)
 // TODO: Modificar en caliente el tileset
@@ -11,16 +12,16 @@
 // TODO: Autotiling
 
 TestScene::TestScene() {
-    tileSet = LoadTexture((assets + "/tileset.png").c_str());
-    tileSetZoneWidth = 200;
+    tileSet = LoadTexture(tileSetPath.c_str());
     tileSetWidthInTiles = 12;
     tileSetHeightInTiles = 10;
     tileWidth = 16;
     tileHeight = 16;
-    tileMap = new TileMap(tileSet, tileSetWidthInTiles, tileSetHeightInTiles, tileWidth, tileHeight);
+    tileMap = new TileMap(tileSetPath, tileSet, tileSetWidthInTiles, tileSetHeightInTiles, tileWidth, tileHeight);
     tileMap->setPosition({static_cast<float>(tileSetZoneWidth), 0});
     tileMap->initEmptyTiles(worldWidth, worldHeight);
-    tileMap->loadMap("../assets/savedMap.tm", worldWidth, worldHeight, tileWidth, tileHeight);
+
+    // tileMap->loadMap("../assets/savedMap.tm", worldWidth, worldHeight, tileWidth, tileHeight);
 
     initCamera(cameraMap);
     initCamera(cameraTileSet);
@@ -145,6 +146,24 @@ void TestScene::draw() {
     rlImGuiBegin();
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Once);
     if (ImGui::Begin("Dimensions")) {
+        if (ImGui::Button("Select TileSet")) {
+            IGFD::FileDialogConfig config;
+            config.path = ".";
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".png,.jpeg,.jpg,.*", config);
+        }
+
+        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
+            if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
+                tileSetPath = ImGuiFileDialog::Instance()->GetFilePathName();
+                tileSet = LoadTexture(tileSetPath.c_str());
+                tileMap->setTileSetPath(tileSetPath);
+            }
+
+            ImGuiFileDialog::Instance()->Close();
+        }
+        ImGui::SameLine();
+        ImGui::Text(tileSetPath.c_str());
+
         ImGui::InputInt("Map width", &worldWidth);
         ImGui::InputInt("Map height", &worldHeight);
 
