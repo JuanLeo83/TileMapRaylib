@@ -7,16 +7,13 @@
 #include "ImGuiFileDialog.h"
 
 // TODO: seleccionar múltiples tiles a la vez para pintarlos de una vez (ya veremos cómo lo hago)
-// TODO: Modificar en caliente el tileset
 // TODO: Añadir capas de tiles
+// TODO: cargar mapa
+// TODO: crear nuevo mapa
 // TODO: Autotiling
 
 TestScene::TestScene() {
     tileSet = LoadTexture(tileSetPath.c_str());
-    tileSetWidthInTiles = 12;
-    tileSetHeightInTiles = 10;
-    tileWidth = 16;
-    tileHeight = 16;
     tileMap = new TileMap(tileSetPath, tileSet, tileSetWidthInTiles, tileSetHeightInTiles, tileWidth, tileHeight);
     tileMap->setPosition({static_cast<float>(tileSetZoneWidth), 0});
     tileMap->initEmptyTiles(worldWidth, worldHeight);
@@ -30,151 +27,52 @@ TestScene::TestScene() {
     mousePosition = GetMousePosition();
     worldPositionMap = GetScreenToWorld2D(GetMousePosition(), cameraMap);
     worldPositionTileSet = GetScreenToWorld2D(GetMousePosition(), cameraTileSet);
-
-    selectedTile = 0;
 }
 
 void TestScene::update(const float deltaTime) {
     mousePosition = GetMousePosition();
     worldPositionMap = GetScreenToWorld2D(mousePosition, cameraMap);
     worldPositionTileSet = GetScreenToWorld2D(GetMousePosition(), cameraTileSet);
-
     tileMap->updateDimens(worldWidth, worldHeight, tileWidth, tileHeight);
 
-    // Scroll
     if (isMouseInsideTileSetZone()) {
         cameraTileSet.zoom += GetMouseWheelMoveV().y * deltaTime;
     } else if (isMouseInsideTileMapZone()) {
         cameraMap.zoom += GetMouseWheelMoveV().y * deltaTime;
     }
 
-    // Camera move
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) || IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
-        if (isMouseInsideTileSetZone()) {
-            cameraTileSet.target.x -= GetMouseDelta().x;
-            cameraTileSet.target.y -= GetMouseDelta().y;
-        } else if (isMouseInsideTileMapZone()) {
-            cameraMap.target.x -= GetMouseDelta().x;
-            cameraMap.target.y -= GetMouseDelta().y;
-        }
+        moveCamera();
     }
 
-    // Save
     if ((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_S)) {
         save();
     }
 
-    // Select tile
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && isMouseInsideTileSet()) {
-        const int tileX = worldPositionTileSet.x / tileWidth;
-        const int tileY = worldPositionTileSet.y / tileHeight;
-        selectedTile = tileY * tileSet.width / tileWidth + tileX;
-        selectedTilePosition.x = tileX * tileWidth;
-        selectedTilePosition.y = tileY * tileHeight;
+        selectTile();
     }
 
-    // Draw tile
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && isMouseInsideTileMap()) {
-        const float tileX = (worldPositionMap.x - static_cast<float>(tileSetZoneWidth)) / static_cast<float>(tileWidth);
-        const float tileY = worldPositionMap.y / static_cast<float>(tileHeight);
-        if (IsKeyDown(KEY_BACKSPACE)) {
-            tileMap->setTile(tileX, tileY, NO_TILE);
-        } else {
-            tileMap->setTile(tileX, tileY, selectedTile);
-        }
+        setTileData();
     }
 
 }
 
 void TestScene::draw() {
     // Map
-    BeginScissorMode(tileSetZoneWidth, 0, GetScreenWidth(), GetScreenHeight());
-    BeginMode2D(cameraMap);
-    tileMap->draw();
-
-    for (int v = 0; v <= worldWidth; v++) {
-        DrawLine(tileSetZoneWidth + v * tileWidth, 0, tileSetZoneWidth + v * tileWidth, worldHeight * tileHeight, GRAY);
-    }
-    for (int h = 0; h <= worldHeight; h++) {
-        DrawLine(tileSetZoneWidth, h * tileHeight, tileSetZoneWidth + worldWidth * tileWidth, h * tileHeight,
-                 LIGHTGRAY);
-    }
-    EndMode2D();
-    EndScissorMode();
+    drawMap();
 
     // TileSet
-    BeginScissorMode(0, 0, tileSetZoneWidth, GetScreenHeight() / 2);
-    DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight(), BLACK);
-    BeginMode2D(cameraTileSet);
-    DrawTexture(tileSet, 0, 0, WHITE);
-    for (int v = 0; v <= tileSet.width; v += tileWidth) {
-        DrawLine(v, 0, v, tileSet.height, WHITE);
-    }
-    for (int h = 0; h <= tileSet.height; h += tileHeight) {
-        DrawLine(0, h, tileSet.width, h, WHITE);
-    }
-
-    DrawRectangleLines(static_cast<int>(selectedTilePosition.x), static_cast<int>(selectedTilePosition.y), tileWidth,
-                       tileHeight, LIME);
-    EndMode2D();
-    EndScissorMode();
+    drawTileSet();
 
     // Selected tile
-    BeginScissorMode(0, GetScreenHeight() / 2, tileSetZoneWidth, GetScreenHeight() / 2);
-    BeginMode2D(cameraTileSelected);
-    DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight(), BLACK);
-    DrawTexturePro(tileSet,
-                   (Rectangle){
-                       selectedTilePosition.x,
-                       selectedTilePosition.y,
-                       static_cast<float>(tileWidth),
-                       static_cast<float>(tileHeight)
-                   },
-                   {
-                       static_cast<float>(tileSetZoneWidth / 2 - tileWidth),
-                       static_cast<float>(GetScreenHeight() / 2 + 15),
-                       32, 32
-                   },
-                   {0, 0}, 0,
-                   WHITE);
-    EndMode2D();
-    EndScissorMode();
+    drawSelectedTile();
 
     DrawRectangle(tileSetZoneWidth - 1, 0, 3, GetScreenHeight(), WHITE);
     DrawRectangle(0, GetScreenHeight() / 2 - 1, tileSetZoneWidth, 3, WHITE);
 
-    rlImGuiBegin();
-    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Once);
-    if (ImGui::Begin("Dimensions")) {
-        if (ImGui::Button("Select TileSet")) {
-            IGFD::FileDialogConfig config;
-            config.path = ".";
-            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".png,.jpeg,.jpg,.*", config);
-        }
-
-        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
-            if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
-                tileSetPath = ImGuiFileDialog::Instance()->GetFilePathName();
-                tileMap->setTileSetPath(tileSetPath);
-            }
-
-            ImGuiFileDialog::Instance()->Close();
-        }
-        ImGui::SameLine();
-        ImGui::Text(tileSetPath.c_str());
-
-        ImGui::InputInt("Map width", &worldWidth);
-        ImGui::InputInt("Map height", &worldHeight);
-
-        ImGui::InputInt("Tile width", &tileWidth);
-        ImGui::InputInt("Tile height", &tileHeight);
-
-        if (ImGui::Button("Save")) {
-            save();
-        }
-    }
-    ImGui::End();
-    rlImGuiEnd();
+    drawGui();
 }
 
 void TestScene::initCamera(Camera2D &camera) {
@@ -212,4 +110,124 @@ bool TestScene::isMouseInsideTileMap() const {
 
 void TestScene::save() const {
     saveMapToFile(*tileMap, "../assets/savedMap.tm");
+}
+
+void TestScene::selectTile() {
+    const int tileX = worldPositionTileSet.x / tileWidth;
+    const int tileY = worldPositionTileSet.y / tileHeight;
+    selectedTile = tileY * tileSet.width / tileWidth + tileX;
+    selectedTilePosition.x = tileX * tileWidth;
+    selectedTilePosition.y = tileY * tileHeight;
+}
+
+void TestScene::setTileData() const {
+    const float tileX = (worldPositionMap.x - static_cast<float>(tileSetZoneWidth)) / static_cast<float>(tileWidth);
+    const float tileY = worldPositionMap.y / static_cast<float>(tileHeight);
+
+    if (IsKeyDown(KEY_BACKSPACE)) {
+        tileMap->setTile(tileX, tileY, NO_TILE);
+    } else {
+        tileMap->setTile(tileX, tileY, selectedTile);
+    }
+}
+
+void TestScene::moveCamera() {
+    if (isMouseInsideTileSetZone()) {
+        cameraTileSet.target.x -= GetMouseDelta().x;
+        cameraTileSet.target.y -= GetMouseDelta().y;
+    } else if (isMouseInsideTileMapZone()) {
+        cameraMap.target.x -= GetMouseDelta().x;
+        cameraMap.target.y -= GetMouseDelta().y;
+    }
+}
+
+void TestScene::drawMap() const {
+    BeginScissorMode(tileSetZoneWidth, 0, GetScreenWidth(), GetScreenHeight());
+    BeginMode2D(cameraMap);
+    tileMap->draw();
+
+    for (int v = 0; v <= worldWidth; v++) {
+        DrawLine(tileSetZoneWidth + v * tileWidth, 0, tileSetZoneWidth + v * tileWidth, worldHeight * tileHeight, GRAY);
+    }
+    for (int h = 0; h <= worldHeight; h++) {
+        DrawLine(tileSetZoneWidth, h * tileHeight, tileSetZoneWidth + worldWidth * tileWidth, h * tileHeight,
+                 LIGHTGRAY);
+    }
+    EndMode2D();
+    EndScissorMode();
+}
+
+void TestScene::drawTileSet() const {
+    BeginScissorMode(0, 0, tileSetZoneWidth, GetScreenHeight() / 2);
+    DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight(), BLACK);
+    BeginMode2D(cameraTileSet);
+    DrawTexture(tileSet, 0, 0, WHITE);
+    for (int v = 0; v <= tileSet.width; v += tileWidth) {
+        DrawLine(v, 0, v, tileSet.height, WHITE);
+    }
+    for (int h = 0; h <= tileSet.height; h += tileHeight) {
+        DrawLine(0, h, tileSet.width, h, WHITE);
+    }
+
+    DrawRectangleLines(static_cast<int>(selectedTilePosition.x), static_cast<int>(selectedTilePosition.y), tileWidth,
+                       tileHeight, LIME);
+    EndMode2D();
+    EndScissorMode();
+}
+
+void TestScene::drawSelectedTile() const {
+    BeginScissorMode(0, GetScreenHeight() / 2, tileSetZoneWidth, GetScreenHeight() / 2);
+    BeginMode2D(cameraTileSelected);
+    DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight(), BLACK);
+    DrawTexturePro(tileSet,
+                   (Rectangle){
+                       selectedTilePosition.x,
+                       selectedTilePosition.y,
+                       static_cast<float>(tileWidth),
+                       static_cast<float>(tileHeight)
+                   },
+                   {
+                       static_cast<float>(tileSetZoneWidth / 2 - tileWidth),
+                       static_cast<float>(GetScreenHeight() / 2 + 15),
+                       32, 32
+                   },
+                   {0, 0}, 0,
+                   WHITE);
+    EndMode2D();
+    EndScissorMode();
+}
+
+void TestScene::drawGui() {
+    rlImGuiBegin();
+    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Once);
+    if (ImGui::Begin("Config")) {
+        if (ImGui::Button("Select TileSet")) {
+            IGFD::FileDialogConfig config;
+            config.path = ".";
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".png,.jpeg,.jpg,.*", config);
+        }
+
+        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
+            if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
+                tileSetPath = ImGuiFileDialog::Instance()->GetFilePathName();
+                tileMap->setTileSetPath(tileSetPath);
+            }
+
+            ImGuiFileDialog::Instance()->Close();
+        }
+        ImGui::SameLine();
+        ImGui::Text(tileSetPath.c_str());
+
+        ImGui::InputInt("Map width", &worldWidth);
+        ImGui::InputInt("Map height", &worldHeight);
+
+        ImGui::InputInt("Tile width", &tileWidth);
+        ImGui::InputInt("Tile height", &tileHeight);
+
+        if (ImGui::Button("Save")) {
+            save();
+        }
+    }
+    ImGui::End();
+    rlImGuiEnd();
 }

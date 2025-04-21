@@ -16,11 +16,10 @@ class TestScene final : public Scene {
     const int tileSetZoneWidth = 500;
     std::string tileSetPath = "";
     Texture2D tileSet{};
-    int tileSetWidthInTiles;
-    int tileSetHeightInTiles;
-    int tileWidth;
-    int tileHeight;
-
+    int tileSetWidthInTiles = 1;
+    int tileSetHeightInTiles = 1;
+    int tileWidth = 1;
+    int tileHeight = 1;
 
     TileMap *tileMap;
 
@@ -30,7 +29,7 @@ class TestScene final : public Scene {
 
     int worldWidth = 20;
     int worldHeight = 20;
-    int selectedTile = NO_TILE;
+    int selectedTile = 0;
     Vector2 selectedTilePosition = {0, 0};
 
     static void initCamera(Camera2D &camera);
@@ -44,6 +43,20 @@ class TestScene final : public Scene {
     bool isMouseInsideTileMap() const;
 
     void save() const;
+
+    void selectTile();
+
+    void setTileData() const;
+
+    void moveCamera();
+
+    void drawMap() const;
+
+    void drawTileSet() const;
+
+    void drawSelectedTile() const;
+
+    void drawGui();
 
 public:
     TestScene();
