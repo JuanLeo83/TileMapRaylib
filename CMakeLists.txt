@@ -1,11 +1,44 @@
 cmake_minimum_required(VERSION 3.30)
 project(Tileset)
+include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 17)
 
 set(ASSETS_PATH "${CMAKE_SOURCE_DIR}/assets")
 
 add_compile_definitions(ASSETS="${ASSETS_PATH}")
+
+set(IMGUI_VERSION 1.91.8)
+FetchContent_Declare(
+        imgui
+        URL https://github.com/ocornut/imgui/archive/refs/tags/v${IMGUI_VERSION}-docking.tar.gz
+)
+FetchContent_MakeAvailable(imgui)
+
+FetchContent_Declare(
+        glfw
+        URL https://github.com/glfw/glfw/archive/refs/tags/3.3.8.tar.gz
+)
+FetchContent_MakeAvailable(glfw)
+
+find_package(OpenGL REQUIRED)
+
+add_library(imgui STATIC
+        ${imgui_SOURCE_DIR}/imgui.cpp
+        ${imgui_SOURCE_DIR}/imgui_demo.cpp
+        ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp
+        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
+target_include_directories(imgui PUBLIC
+        ${imgui_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}/backends
+)
+
+target_link_libraries(imgui PUBLIC glfw OpenGL::GL)
 
 set(ENGINE_HEADERS
         engine/game/Game.h
@@ -32,6 +65,10 @@ add_executable(Tileset main.cpp
         game/Player.h
 )
 
+target_sources(Tileset PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/libs/rlImGui/rlImGui.cpp
+)
+
 find_library(RAYLIB_LIBRARY
         NAMES raylib
         PATHS /opt/homebrew/lib /usr/local/lib
@@ -47,6 +84,7 @@ find_path(RAYLIB_INCLUDE_DIR
 target_include_directories(Tileset PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/engine
         ${RAYLIB_INCLUDE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/libs/rlImGui
 )
 
 target_link_libraries(Tileset PRIVATE
@@ -55,6 +93,7 @@ target_link_libraries(Tileset PRIVATE
         "-framework IOKit"
         "-framework Cocoa"
         "-framework CoreVideo"
+        imgui
 )
 
 target_compile_features(Tileset PRIVATE cxx_std_17)

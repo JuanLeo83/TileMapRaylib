@@ -2,6 +2,8 @@
 
 #include <raylib.h>
 #include <tileMap/TileMapUtils.h>
+#include "rlImGui.h"
+#include "imgui.h"
 
 // TODO: seleccionar múltiples tiles a la vez para pintarlos de una vez (ya veremos cómo lo hago)
 // TODO: Modificar en caliente dimensiones del mapa
@@ -136,6 +138,14 @@ void TestScene::draw() {
 
     DrawRectangle(tileSetZoneWidth - 1, 0, 3, GetScreenHeight(), WHITE);
     DrawRectangle(0, GetScreenHeight() / 2 - 1, tileSetZoneWidth, 3, WHITE);
+
+    rlImGuiBegin();
+    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Once);
+    if (ImGui::Begin("Editor")) {
+        ImGui::Text("Hola desde ImGui!");
+    }
+    ImGui::End();
+    rlImGuiEnd();
 }
 
 void TestScene::initCamera(Camera2D &camera) {

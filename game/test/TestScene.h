@@ -32,7 +32,7 @@ class TestScene final : public Scene {
     int selectedTile = NO_TILE;
     Vector2 selectedTilePosition = {0, 0};
 
-    static static void initCamera(Camera2D &camera);
+    static void initCamera(Camera2D &camera);
 
     bool isMouseInsideTileSetZone() const;
 
