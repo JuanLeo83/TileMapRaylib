@@ -14,7 +14,7 @@ TestScene::TestScene() {
     tileSet = LoadTexture(tileSetPath.c_str());
     tileMap = new TileMap(tileSetPath, tileSet, tileSetWidthInTiles, tileSetHeightInTiles, tileWidth, tileHeight);
     tileMap->setPosition({static_cast<float>(tileSetZoneWidth), 0});
-    tileMap->initEmptyTiles(worldWidth, worldHeight);
+    tileMap->initEmptyTiles(worldWidth, worldHeight, 1);
 
     initCamera(cameraMap);
     initCamera(cameraTileSet);
@@ -93,7 +93,6 @@ bool TestScene::isMouseInsideTileMapZone() const {
                GetScreenWidth());
 }
 
-
 bool TestScene::isMouseInsideTileMap() const {
     return worldPositionMap.x > tileMap->getPosition().x && worldPositionMap.x < tileMap->getPosition().x +
            static_cast<float>(worldWidth * tileWidth)
@@ -121,9 +120,9 @@ void TestScene::setTileData() {
     const float tileY = worldPositionMap.y / static_cast<float>(tileHeight);
 
     if (IsKeyDown(KEY_BACKSPACE)) {
-        tileMap->setTile(tileX, tileY, NO_TILE);
+        tileMap->setTile(tileX, tileY, NO_TILE, activeLayer);
     } else {
-        tileMap->setTile(tileX, tileY, selectedTile);
+        tileMap->setTile(tileX, tileY, selectedTile, activeLayer);
     }
 
     unsavedChanges = true;
@@ -146,7 +145,7 @@ void TestScene::moveCamera() {
 void TestScene::drawMap() const {
     BeginScissorMode(tileSetZoneWidth, 0, GetScreenWidth(), GetScreenHeight());
     BeginMode2D(cameraMap);
-    tileMap->draw();
+    tileMap->draw(activeLayer);
 
     for (int v = 0; v <= worldWidth; v++) {
         DrawLine(tileSetZoneWidth + v * tileWidth, 0, tileSetZoneWidth + v * tileWidth, worldHeight * tileHeight, GRAY);
@@ -202,6 +201,14 @@ void TestScene::drawSelectedTile() const {
 void TestScene::drawGui() {
     rlImGuiBegin();
 
+    drawGuiSettings();
+    drawGuiTileSet();
+    drawGuiTileMap();
+
+    rlImGuiEnd();
+}
+
+void TestScene::drawGuiSettings() {
     ImGui::SetNextWindowPos(ImVec2(GetScreenWidth() - 300, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(300, GetScreenHeight()), ImGuiCond_Always);
 
@@ -293,7 +300,9 @@ void TestScene::drawGui() {
         confirmNewMap();
     }
     ImGui::End();
+}
 
+void TestScene::drawGuiTileSet() {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(299, 55), ImGuiCond_Always);
     if (ImGui::Begin("TileSet Controls", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
@@ -303,18 +312,112 @@ void TestScene::drawGui() {
         }
     }
     ImGui::End();
+}
 
+void TestScene::drawGuiTileMap() {
     ImGui::SetNextWindowPos(ImVec2(302, 0), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth() - 602, 55), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth() - 602, 200), ImGuiCond_Always);
+
     if (ImGui::Begin("TileMap Controls", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
         if (ImGui::Button("Reset position")) {
             cameraMap.target = {0, 0};
             cameraMap.zoom = 1;
         }
+
+        ImGui::Spacing();
+        ImGui::Spacing();
+
+        if (ImGui::BeginPopupModal("Remove layer confirmation", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Are you sure you want to delete the selected layer?\nThis action cannot be undone.");
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            constexpr float buttonWidth = 60.0f;
+            const float spacing = ImGui::GetStyle().ItemSpacing.x;
+            const float totalWidth = 2 * buttonWidth + spacing;
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - totalWidth - ImGui::GetStyle().WindowPadding.x);
+
+            if (ImGui::Button("Yes", ImVec2(60, 0))) {
+                tileMap->removeLayer(activeLayer);
+                activeLayer = std::max(0, activeLayer - 1);
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("No", ImVec2(60, 0))) {
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
+
+        ImGui::Text("Active layer:");
+        ImGui::SetNextItemWidth(100);
+        if (ImGui::BeginCombo("##activeLayer", std::to_string(activeLayer).c_str())) {
+            for (int i = 0; i < tileMap->getLayers().size(); ++i) {
+                const bool isSelected = activeLayer == i;
+                if (ImGui::Selectable(std::to_string(i).c_str(), isSelected)) {
+                    activeLayer = i;
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Add layer")) {
+            tileMap->addLayer();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Remove layer")) {
+            ImGui::OpenPopup("Remove layer confirmation");
+        }
+
+        ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Separator();
+
+        ImGui::Text("Move content from selected layer to:");
+        ImGui::SetNextItemWidth(100);
+        if (ImGui::BeginCombo("##targetLayer", std::to_string(targetLayer).c_str())) {
+            for (int i = 0; i < tileMap->getLayers().size(); ++i) {
+                const bool isSelected = (targetLayer == i);
+                if (ImGui::Selectable(std::to_string(i).c_str(), isSelected)) {
+                    targetLayer = i;
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Move content")) {
+            if (activeLayer != targetLayer) {
+                auto &layers = tileMap->getLayers();
+                layers[targetLayer] = layers[activeLayer];
+                layers[activeLayer] = std::vector(worldHeight, std::vector<int>(worldWidth, NO_TILE));
+            } else {
+                ImGui::OpenPopup("Error");
+            }
+        }
+
+        if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("You cannot move the content to the same layer.");
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            constexpr float buttonWidth = 60.0f;
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonWidth - ImGui::GetStyle().WindowPadding.x);
+
+            if (ImGui::Button("Close", ImVec2(buttonWidth, 0))) {
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
     }
     ImGui::End();
-
-    rlImGuiEnd();
 }
 
 void TestScene::showSaveMapDialog() {
@@ -331,7 +434,8 @@ void TestScene::showLoadMapDialog() {
 
 
 void TestScene::loadMap(const std::string &filePath, const std::string &fileName) {
-    tileMap->loadMap(filePath, fileName, worldWidth, worldHeight, tileWidth, tileHeight);
+    int layerCount = 0;
+    tileMap->loadMap(filePath, fileName, worldWidth, worldHeight, tileWidth, tileHeight, layerCount);
     tileSetName = tileSetPath.substr(tileSetPath.find_last_of("/\\") + 1);
 }
 
@@ -340,7 +444,7 @@ void TestScene::createNewMap() {
     worldHeight = 20;
     tileWidth = 16;
     tileHeight = 16;
-    tileMap->initEmptyTiles(worldWidth, worldHeight);
+    tileMap->initEmptyTiles(worldWidth, worldHeight, 1);
     tileSetPath = "";
     tileSetName = "";
     unsavedChanges = false;
@@ -353,6 +457,7 @@ void TestScene::confirmNewMap() {
             ImGui::Text(
                 "There are unsaved changes. Do you want to continue?\nThis action will discard the current changes.");
             ImGui::Separator();
+            ImGui::Spacing();
 
             constexpr float buttonWidth = 60.0f;
             const float spacing = ImGui::GetStyle().ItemSpacing.x;

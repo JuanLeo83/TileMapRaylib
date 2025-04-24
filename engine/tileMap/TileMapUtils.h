@@ -1,13 +1,9 @@
 #pragma once
-#include <fstream>
 #include <iostream>
+#include <fstream>
 #include <sstream>
-#include <string>
 
-#include "TileMap.h"
-
-
-inline std::vector<std::vector<int> > loadMapFromFile(const std::string &fileName, std::string &tileSetPath, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight) {
+inline std::vector<std::vector<std::vector<int>>> loadMapFromFile(const std::string &fileName, std::string &tileSetPath, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight, int &layerCount) {
     std::ifstream file(fileName);
 
     if (!file.is_open()) {
@@ -16,12 +12,12 @@ inline std::vector<std::vector<int> > loadMapFromFile(const std::string &fileNam
     }
 
     std::string line;
-    std::vector<std::vector<int> > tiles;
+    std::vector<std::vector<std::vector<int>>> layers;
 
     while (std::getline(file, line)) {
         if (line.rfind("tileSetPath=", 0) == 0) {
             tileSetPath = line.substr(12);
-        } if (line.rfind("map_width=", 0) == 0) {
+        } else if (line.rfind("map_width=", 0) == 0) {
             mapWidth = std::stoi(line.substr(10));
         } else if (line.rfind("map_height=", 0) == 0) {
             mapHeight = std::stoi(line.substr(11));
@@ -29,23 +25,26 @@ inline std::vector<std::vector<int> > loadMapFromFile(const std::string &fileNam
             tileWidth = std::stoi(line.substr(11));
         } else if (line.rfind("tile_height=", 0) == 0) {
             tileHeight = std::stoi(line.substr(12));
-        } else if (line == "map=") {
-            while (std::getline(file, line)) {
+        } else if (line.rfind("layer_count=", 0) == 0) {
+            layerCount = std::stoi(line.substr(12));
+            layers.resize(layerCount, std::vector(mapHeight, std::vector(mapWidth, -1)));
+        } else if (line.rfind("layer=", 0) == 0) {
+            int layerIndex = std::stoi(line.substr(6));
+            for (int r = 0; r < mapHeight; ++r) {
+                std::getline(file, line);
                 std::istringstream stream(line);
-                std::vector<int> row;
                 std::string value;
+                int c = 0;
 
                 while (std::getline(stream, value, ',')) {
-                    row.push_back(std::stoi(value));
+                    layers[layerIndex][r][c++] = std::stoi(value);
                 }
-
-                tiles.push_back(row);
             }
         }
     }
 
     file.close();
-    return tiles;
+    return layers;
 }
 
 inline void saveMapToFile(const TileMap &tileMap, const std::string &fileName) {
@@ -56,21 +55,30 @@ inline void saveMapToFile(const TileMap &tileMap, const std::string &fileName) {
         return;
     }
 
+    const auto &layers = tileMap.getLayers();
+    if (layers.empty() || layers[0].empty() || layers[0][0].empty()) {
+        std::cerr << "Error: TileMap layers are not properly initialized." << std::endl;
+        return;
+    }
+
     file << "tileSetPath=" << tileMap.getTileSetPath() << "\n";
-    file << "map_width=" << tileMap.getTiles()[0].size() << "\n";
-    file << "map_height=" << tileMap.getTiles().size() << "\n";
+    file << "map_width=" << layers[0][0].size() << "\n";
+    file << "map_height=" << layers[0].size() << "\n";
     file << "tile_width=" << tileMap.getTileWidth() << "\n";
     file << "tile_height=" << tileMap.getTileHeight() << "\n";
-    file << "map=\n";
+    file << "layer_count=" << layers.size() << "\n";
 
-    for (const auto &row: tileMap.getTiles()) {
-        for (size_t col = 0; col < row.size(); ++col) {
-            file << row[col];
-            if (col < row.size() - 1) {
-                file << ",";
+    for (size_t layerIndex = 0; layerIndex < layers.size(); ++layerIndex) {
+        file << "layer=" << layerIndex << "\n";
+        for (const auto &row : layers[layerIndex]) {
+            for (size_t col = 0; col < row.size(); ++col) {
+                file << row[col];
+                if (col < row.size() - 1) {
+                    file << ",";
+                }
             }
+            file << "\n";
         }
-        file << "\n";
     }
 
     file.close();

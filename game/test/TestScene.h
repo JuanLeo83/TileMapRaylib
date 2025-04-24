@@ -16,8 +16,8 @@ class TestScene final : public Scene {
     Camera2D cameraMap{};
 
     const int tileSetZoneWidth = 300;
-    std::string tileSetPath = "";
-    std::string tileSetName = "";
+    std::string tileSetPath;
+    std::string tileSetName;
     Texture2D tileSet{};
     int tileSetWidthInTiles = 1;
     int tileSetHeightInTiles = 1;
@@ -35,6 +35,9 @@ class TestScene final : public Scene {
     int selectedTile = 0;
     Vector2 selectedTilePosition = {0, 0};
 
+    int activeLayer = 0;
+    int targetLayer = 0;
+
     static void initCamera(Camera2D &camera);
 
     bool isMouseInsideTileSetZone() const;
@@ -45,7 +48,7 @@ class TestScene final : public Scene {
 
     bool isMouseInsideTileMap() const;
 
-    void saveMap(const std::string &filePath,  const std::string &fileName);
+    void saveMap(const std::string &filePath, const std::string &fileName);
 
     void selectTile();
 
@@ -61,11 +64,17 @@ class TestScene final : public Scene {
 
     void drawGui();
 
+    void drawGuiSettings();
+
+    void drawGuiTileSet();
+
+    void drawGuiTileMap();
+
     static void showSaveMapDialog();
 
     static void showLoadMapDialog();
 
-    void loadMap(const std::string &filePath,  const std::string &fileName);
+    void loadMap(const std::string &filePath, const std::string &fileName);
 
     void createNewMap();
 
@@ -73,7 +82,8 @@ class TestScene final : public Scene {
 
 public:
     TestScene();
-    ~TestScene();
+
+    ~TestScene() override;
 
     void update(float deltaTime) override;
 

@@ -11,8 +11,8 @@ TileMap::TileMap(std::string &tileSetPath, Texture2D &tileSet, const int widthIn
                                          widthInTiles(widthInTiles), heightInTiles(heightInTiles),
                                          tileWidth(tileWidth), tileHeight(tileHeight),
                                          mapWidthInTiles(0), mapHeightInTiles(0) {
-    srcRect.width = tileWidth;
-    srcRect.height = tileHeight;
+    srcRect.width = static_cast<float>(tileWidth);
+    srcRect.height = static_cast<float>(tileHeight);
 }
 
 Vector2 TileMap::getPosition() const {
@@ -23,65 +23,85 @@ void TileMap::setPosition(const Vector2 position) {
     mapPosition = position;
 }
 
-void TileMap::initEmptyTiles(const int worldWidth, const int worldHeight) {
+void TileMap::initEmptyTiles(const int worldWidth, const int worldHeight, const int layerCount) {
     mapWidthInTiles = worldWidth;
     mapHeightInTiles = worldHeight;
-    tiles = std::vector(worldHeight, std::vector(worldWidth, NO_TILE));
+    layers = std::vector(layerCount, std::vector(worldHeight, std::vector(worldWidth, NO_TILE)));
 }
 
-void TileMap::draw() {
-    for (int row = 0; row < mapHeightInTiles; ++row) {
-        for (int col = 0; col < mapWidthInTiles; ++col) {
-            const int tileIndex = tiles[row][col];
-            if (tileIndex == NO_TILE) continue;
+void TileMap::draw(const int &activeLayer) {
+    for (int layerIndex = 0; layerIndex < layers.size(); ++layerIndex) {
+        const auto &layer = layers[layerIndex];
+        for (int row = 0; row < mapHeightInTiles; ++row) {
+            for (int col = 0; col < mapWidthInTiles; ++col) {
+                const int tileIndex = layer[row][col];
+                if (tileIndex == NO_TILE) continue;
 
-            const int tileRow = tileIndex / widthInTiles;
-            srcRect.x = static_cast<float>((tileIndex - tileRow * widthInTiles) * tileWidth);
-            srcRect.y = static_cast<float>(tileRow * tileHeight);
+                const int tileRow = tileIndex / widthInTiles;
+                srcRect.x = static_cast<float>((tileIndex - tileRow * widthInTiles) * tileWidth);
+                srcRect.y = static_cast<float>(tileRow * tileHeight);
 
-            DrawTextureRec(
-                tileSet,
-                srcRect,
-                {mapPosition.x + col * tileWidth, mapPosition.y + row * tileHeight},
-                WHITE
+                // Aplicar transparencia si la capa está por encima de la seleccionada
+                Color tint = WHITE;
+                if (layerIndex > activeLayer) {
+                    tint.a = 150; // Ajustar el nivel de transparencia (0-255)
+                }
+
+                DrawTextureRec(
+                    tileSet,
+                    srcRect,
+                    {mapPosition.x + col * tileWidth, mapPosition.y + row * tileHeight},
+                    tint
+                );
+            }
+        }
+
+        // Oscurecer la capa si está por debajo de la seleccionada
+        if (layerIndex < activeLayer) {
+            DrawRectangle(
+                static_cast<int>(mapPosition.x),
+                static_cast<int>(mapPosition.y),
+                mapWidthInTiles * tileWidth,
+                mapHeightInTiles * tileHeight,
+                {0, 0, 0, 100} // Color negro semitransparente
             );
         }
     }
 }
 
-void TileMap::loadMap(const std::string &filePath, const std::string &fileName, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight) {
+void TileMap::loadMap(const std::string &filePath, const std::string &fileName, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight, int &layerCount) {
     if (tileSet.id != 0) {
         UnloadTexture(tileSet);
     }
-    tiles = loadMapFromFile(filePath, tileSetPath, mapWidthInTiles, mapHeightInTiles, tileWidth, tileHeight);
+
+    layers = loadMapFromFile(filePath, tileSetPath, mapWidthInTiles, mapHeightInTiles, tileWidth, tileHeight, layerCount);
     mapWidth = mapWidthInTiles;
     mapHeight = mapHeightInTiles;
     widthInTiles = tileSet.width / tileWidth;
     heightInTiles = tileSet.height / tileHeight;
     tileSet = LoadTexture(tileSetPath.c_str());
     setTileMapName(fileName);
-
 }
 
-void TileMap::setTile(const float &positionX, const float &positionY, const int &tileIndex) {
+void TileMap::setTile(const float &positionX, const float &positionY, const int &tileIndex, const int &layerIndex) {
     const int col = static_cast<int>(positionX);
     const int row = static_cast<int>(positionY);
 
-    if (row >= 0 && row < mapHeightInTiles && col >= 0 && col < mapWidthInTiles) {
-        tiles[row][col] = tileIndex;
+    if (row >= 0 && row < mapHeightInTiles && col >= 0 && col < mapWidthInTiles && layerIndex >= 0 && layerIndex < layers.size()) {
+        layers[layerIndex][row][col] = tileIndex;
     }
 }
 
 void TileMap::setMapWidth(const int &value) {
     if (value == mapWidthInTiles) return;
 
-    if (mapWidthInTiles < value) {
-        for (auto &row: tiles) {
-            row.resize(value, NO_TILE);
-        }
-    } else {
-        for (auto &row: tiles) {
-            row.resize(value);
+    for (auto &layer : layers) {
+        for (auto &row : layer) {
+            if (mapWidthInTiles < value) {
+                row.resize(value, NO_TILE); // Expandir con NO_TILE
+            } else {
+                row.resize(value); // Reducir el tamaño
+            }
         }
     }
 
@@ -91,10 +111,12 @@ void TileMap::setMapWidth(const int &value) {
 void TileMap::setMapHeight(const int &value) {
     if (value == mapHeightInTiles) return;
 
-    if (mapHeightInTiles < value) {
-        tiles.resize(value, std::vector(mapWidthInTiles, NO_TILE));
-    } else {
-        tiles.resize(value);
+    for (auto &layer : layers) {
+        if (mapHeightInTiles < value) {
+            layer.resize(value, std::vector<int>(mapWidthInTiles, NO_TILE)); // Expandir con NO_TILE
+        } else {
+            layer.resize(value); // Reducir el tamaño
+        }
     }
 
     mapHeightInTiles = value;
@@ -131,6 +153,16 @@ void TileMap::updateDimens(const int &mapWidth, const int &mapHeight, const int 
     setMapHeight(mapHeight);
     setTileWidth(tileWidth);
     setTileHeight(tileHeight);
+}
+
+void TileMap::addLayer() {
+    layers.emplace_back(mapHeightInTiles, std::vector(mapWidthInTiles, NO_TILE));
+}
+
+void TileMap::removeLayer(const int layerIndex) {
+    if (layers.size() > 1 && layerIndex >= 0 && layerIndex < layers.size()) {
+        layers.erase(layers.begin() + layerIndex);
+    }
 }
 
 void TileMap::setTileMapName(const std::string &name) {

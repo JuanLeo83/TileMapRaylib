@@ -14,7 +14,7 @@ class TileMap {
     int tileWidth;
     int tileHeight;
 
-    std::vector <std::vector<int>> tiles;
+    std::vector<std::vector<std::vector<int> > > layers;
     int mapWidthInTiles;
     int mapHeightInTiles;
     Rectangle srcRect = {};
@@ -24,19 +24,21 @@ class TileMap {
     Vector2 mapPosition = {0, 0};
 
 public:
-    explicit TileMap(std::string &tileSetPath, Texture2D &tileSet, int widthInTiles, int heightInTiles, int tileWidth, int tileHeight);
+    explicit TileMap(std::string &tileSetPath, Texture2D &tileSet, int widthInTiles, int heightInTiles, int tileWidth,
+                     int tileHeight);
 
     Vector2 getPosition() const;
 
     void setPosition(Vector2 position);
 
-    void initEmptyTiles(int worldWidth, int worldHeight);
+    void initEmptyTiles(int worldWidth, int worldHeight, int layerCount);
 
-    void draw();
+    void draw(const int &activeLayer);
 
-    void loadMap(const std::string &filePath,  const std::string &fileName, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight);
+    void loadMap(const std::string &filePath, const std::string &fileName, int &mapWidth, int &mapHeight,
+                 int &tileWidth, int &tileHeight, int &layerCount);
 
-    void setTile(const float &positionX, const float &positionY, const int &tileIndex);
+    void setTile(const float &positionX, const float &positionY, const int &tileIndex, const int &layerIndex);
 
     void setMapWidth(const int &value);
 
@@ -62,9 +64,17 @@ public:
 
     void updateDimens(const int &mapWidth, const int &mapHeight, const int &tileWidth, const int &tileHeight);
 
-    std::vector<std::vector<int>> getTiles() const {
-        return tiles;
+    std::vector<std::vector<std::vector<int>>> &getLayers() {
+        return layers;
     }
+
+    const std::vector<std::vector<std::vector<int>>> &getLayers() const {
+        return layers;
+    }
+
+    void addLayer();
+
+    void removeLayer(int layerIndex);
 
     void setTileMapName(const std::string &name);
 
