@@ -18,8 +18,6 @@ TestScene::TestScene() {
     tileMap->setPosition({static_cast<float>(tileSetZoneWidth), 0});
     tileMap->initEmptyTiles(worldWidth, worldHeight);
 
-    tileMap->loadMap("../assets/savedMap.tm", worldWidth, worldHeight, tileWidth, tileHeight);
-
     initCamera(cameraMap);
     initCamera(cameraTileSet);
     initCamera(cameraTileSelected);
@@ -48,7 +46,7 @@ void TestScene::update(const float deltaTime) {
     }
 
     if ((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_S)) {
-        save();
+        showSaveMapDialog();
     }
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && isMouseInsideTileSet()) {
@@ -72,7 +70,7 @@ void TestScene::draw() {
     drawSelectedTile();
 
     DrawRectangle(tileSetZoneWidth - 1, 0, 3, GetScreenHeight(), WHITE);
-    DrawRectangle(0, GetScreenHeight() / 2 - 1, tileSetZoneWidth, 3, WHITE);
+    DrawRectangle(0, GetScreenHeight() * 0.8f - 1, tileSetZoneWidth, 3, WHITE);
 
     drawGui();
 }
@@ -88,12 +86,12 @@ void TestScene::initCamera(Camera2D &camera) {
 
 bool TestScene::isMouseInsideTileSetZone() const {
     return mousePosition.x > 0 && mousePosition.x < static_cast<float>(tileSetZoneWidth) &&
-           mousePosition.y > 0 && mousePosition.y < static_cast<float>(GetScreenHeight()) / 2;
+           mousePosition.y > 0 && mousePosition.y < static_cast<float>(GetScreenHeight()) * 0.8f;
 }
 
 bool TestScene::isMouseInsideTileSet() const {
     return worldPositionTileSet.x > 0 && worldPositionTileSet.x < tileSet.width && mousePosition.x < tileSetZoneWidth &&
-           worldPositionTileSet.y > 0 && worldPositionTileSet.y < tileSet.height && mousePosition.y < GetScreenHeight() / 2;
+           worldPositionTileSet.y > 0 && worldPositionTileSet.y < tileSet.height && mousePosition.y < GetScreenHeight() * 0.8f;
 }
 
 bool TestScene::isMouseInsideTileMapZone() const {
@@ -110,8 +108,9 @@ bool TestScene::isMouseInsideTileMap() const {
            static_cast<float>(worldHeight * tileHeight);
 }
 
-void TestScene::save() const {
-    saveMapToFile(*tileMap, "../assets/savedMap.tm");
+void TestScene::save(const std::string &filePath,  const std::string &fileName) const {
+    saveMapToFile(*tileMap, filePath);
+    tileMap->setTileMapName(fileName);
 }
 
 void TestScene::selectTile() {
@@ -135,11 +134,11 @@ void TestScene::setTileData() const {
 
 void TestScene::moveCamera() {
     if (isMouseInsideTileSetZone()) {
-        cameraTileSet.target.x -= GetMouseDelta().x;
-        cameraTileSet.target.y -= GetMouseDelta().y;
+        cameraTileSet.target.x -= GetMouseDelta().x / cameraTileSet.zoom;
+        cameraTileSet.target.y -= GetMouseDelta().y / cameraTileSet.zoom;
     } else if (isMouseInsideTileMapZone()) {
-        cameraMap.target.x -= GetMouseDelta().x;
-        cameraMap.target.y -= GetMouseDelta().y;
+        cameraMap.target.x -= GetMouseDelta().x / cameraMap.zoom;
+        cameraMap.target.y -= GetMouseDelta().y / cameraMap.zoom;
     }
 }
 
@@ -160,8 +159,8 @@ void TestScene::drawMap() const {
 }
 
 void TestScene::drawTileSet() const {
-    BeginScissorMode(0, 0, tileSetZoneWidth, GetScreenHeight() / 2);
-    DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight(), BLACK);
+    BeginScissorMode(0, 0, tileSetZoneWidth, GetScreenHeight() * 0.8f);
+    DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight() * 0.8f, BLACK);
     BeginMode2D(cameraTileSet);
     DrawTexture(tileSet, 0, 0, WHITE);
     for (int v = 0; v <= tileSet.width; v += tileWidth) {
@@ -178,9 +177,9 @@ void TestScene::drawTileSet() const {
 }
 
 void TestScene::drawSelectedTile() const {
-    BeginScissorMode(0, GetScreenHeight() / 2, tileSetZoneWidth, GetScreenHeight() / 2);
+    BeginScissorMode(0, GetScreenHeight() * 0.8f, tileSetZoneWidth, GetScreenHeight() * 0.2f);
     BeginMode2D(cameraTileSelected);
-    DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight(), BLACK);
+    DrawRectangle(0, GetScreenHeight() * 0.8f, tileSetZoneWidth, GetScreenHeight() * 0.2f, BLACK);
     DrawTexturePro(tileSet,
                    (Rectangle){
                        selectedTilePosition.x,
@@ -190,8 +189,8 @@ void TestScene::drawSelectedTile() const {
                    },
                    {
                        static_cast<float>(tileSetZoneWidth / 2 - tileWidth),
-                       static_cast<float>(GetScreenHeight() / 2 + 15),
-                       32, 32
+                       static_cast<float>(GetScreenHeight() * 0.8 + 15),
+                       96, 96
                    },
                    {0, 0}, 0,
                    WHITE);
@@ -206,6 +205,8 @@ void TestScene::drawGui() {
     ImGui::SetNextWindowSize(ImVec2(300, GetScreenHeight()), ImGuiCond_Always);
 
     if (ImGui::Begin("Config", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
+        ImGui::Text("TileSet: %s", tileSetName.c_str());
+        ImGui::Separator();
         if (ImGui::Button("Select TileSet")) {
             IGFD::FileDialogConfig config;
             config.path = ".";
@@ -215,24 +216,77 @@ void TestScene::drawGui() {
         if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
             if (ImGuiFileDialog::Instance()->IsOk()) {
                 tileSetPath = ImGuiFileDialog::Instance()->GetFilePathName();
+                tileSetName = ImGuiFileDialog::Instance()->GetCurrentFileName();
                 tileMap->setTileSetPath(tileSetPath);
             }
 
             ImGuiFileDialog::Instance()->Close();
         }
-        ImGui::SameLine();
-        ImGui::Text(tileSetPath.c_str());
 
         ImGui::InputInt("Map width", &worldWidth);
         ImGui::InputInt("Map height", &worldHeight);
 
+        ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Text("TileMap: %s", tileMap->getTileMapName().c_str());
+        ImGui::Separator();
+
         ImGui::InputInt("Tile width", &tileWidth);
         ImGui::InputInt("Tile height", &tileHeight);
 
-        if (ImGui::Button("Save")) {
-            save();
+        ImGui::Spacing();
+        ImGui::Spacing();
+
+        if (ImGui::Button("Load map")) {
+            showLoadMapDialog();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Save map")) {
+            showSaveMapDialog();
+        }
+
+        if (ImGuiFileDialog::Instance()->Display("LoadMapDlgKey")) {
+            if (ImGuiFileDialog::Instance()->IsOk()) {
+                std::string loadPath = ImGuiFileDialog::Instance()->GetFilePathName();
+                std::string fileName = ImGuiFileDialog::Instance()->GetCurrentFileName();
+                loadMap(loadPath, fileName);
+            }
+
+            ImGuiFileDialog::Instance()->Close();
+        }
+
+        if (ImGuiFileDialog::Instance()->Display("SaveMapDlgKey")) {
+            if (ImGuiFileDialog::Instance()->IsOk()) {
+                const std::string savePath = ImGuiFileDialog::Instance()->GetFilePathName();
+                const std::string fileName = ImGuiFileDialog::Instance()->GetCurrentFileName();
+                save(savePath, fileName);
+            }
+
+            ImGuiFileDialog::Instance()->Close();
         }
     }
     ImGui::End();
     rlImGuiEnd();
+}
+
+void TestScene::showSaveMapDialog() {
+    IGFD::FileDialogConfig config;
+    config.path = ".";
+    ImGuiFileDialog::Instance()->OpenDialog("SaveMapDlgKey", "Save Map As", ".tm", config);
+}
+
+void TestScene::showLoadMapDialog() {
+    IGFD::FileDialogConfig config;
+    config.path = ".";
+    ImGuiFileDialog::Instance()->OpenDialog("LoadMapDlgKey", "Load Map", ".tm", config);
+}
+
+
+void TestScene::loadMap(const std::string &filePath, const std::string &fileName) {
+    tileMap->loadMap(filePath, fileName, worldWidth, worldHeight, tileWidth, tileHeight);
+    tileSetName = tileSetPath.substr(tileSetPath.find_last_of("/\\") + 1);
 }

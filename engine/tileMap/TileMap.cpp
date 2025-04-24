@@ -49,11 +49,12 @@ void TileMap::draw() {
     }
 }
 
-void TileMap::loadMap(const std::string &fileName, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight) {
-    tiles = loadMapFromFile(fileName, tileSetPath, mapWidthInTiles, mapHeightInTiles, tileWidth, tileHeight);
+void TileMap::loadMap(const std::string &filePath, const std::string &fileName, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight) {
+    tiles = loadMapFromFile(filePath, tileSetPath, mapWidthInTiles, mapHeightInTiles, tileWidth, tileHeight);
     mapWidth = mapWidthInTiles;
     mapHeight = mapHeightInTiles;
     tileSet = LoadTexture(tileSetPath.c_str());
+    setTileMapName(fileName);
 }
 
 void TileMap::setTile(const float positionX, const float positionY, const int tileIndex) {
@@ -121,4 +122,8 @@ void TileMap::updateDimens(const int &mapWidth, const int &mapHeight, const int 
     setMapHeight(mapHeight);
     setTileWidth(tileWidth);
     setTileHeight(tileHeight);
+}
+
+void TileMap::setTileMapName(const std::string &name) {
+    tileMapName = name;
 }

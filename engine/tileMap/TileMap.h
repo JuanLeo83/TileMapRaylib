@@ -7,6 +7,7 @@
 class TileMap {
     std::string &tileSetPath;
     Texture2D &tileSet;
+    std::string tileMapName;
     int widthInTiles;
     int heightInTiles;
 
@@ -33,7 +34,7 @@ public:
 
     void draw();
 
-    void loadMap(const std::string &fileName, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight);
+    void loadMap(const std::string &filePath,  const std::string &fileName, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight);
 
     void setTile(float positionX, float positionY, int tileIndex);
 
@@ -64,4 +65,10 @@ public:
     std::vector<std::vector<int>> getTiles() const {
         return tiles;
     }
+
+    void setTileMapName(const std::string &name);
+
+    std::string getTileMapName() const {
+        return tileMapName;
+    };
 };

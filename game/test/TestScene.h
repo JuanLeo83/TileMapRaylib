@@ -15,6 +15,7 @@ class TestScene final : public Scene {
 
     const int tileSetZoneWidth = 300;
     std::string tileSetPath = "";
+    std::string tileSetName = "";
     Texture2D tileSet{};
     int tileSetWidthInTiles = 1;
     int tileSetHeightInTiles = 1;
@@ -42,7 +43,7 @@ class TestScene final : public Scene {
 
     bool isMouseInsideTileMap() const;
 
-    void save() const;
+    void save(const std::string &filePath,  const std::string &fileName) const;
 
     void selectTile();
 
@@ -57,6 +58,12 @@ class TestScene final : public Scene {
     void drawSelectedTile() const;
 
     void drawGui();
+
+    static void showSaveMapDialog();
+
+    static void showLoadMapDialog();
+
+    void loadMap(const std::string &filePath,  const std::string &fileName);
 
 public:
     TestScene();
