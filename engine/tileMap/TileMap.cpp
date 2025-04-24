@@ -53,8 +53,11 @@ void TileMap::loadMap(const std::string &filePath, const std::string &fileName, 
     tiles = loadMapFromFile(filePath, tileSetPath, mapWidthInTiles, mapHeightInTiles, tileWidth, tileHeight);
     mapWidth = mapWidthInTiles;
     mapHeight = mapHeightInTiles;
+    widthInTiles = tileSet.width / tileWidth;
+    heightInTiles = tileSet.height / tileHeight;
     tileSet = LoadTexture(tileSetPath.c_str());
     setTileMapName(fileName);
+
 }
 
 void TileMap::setTile(const float positionX, const float positionY, const int tileIndex) {

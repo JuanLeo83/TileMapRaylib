@@ -58,13 +58,8 @@ void TestScene::update(const float deltaTime) {
 }
 
 void TestScene::draw() {
-    // Map
     drawMap();
-
-    // TileSet
     drawTileSet();
-
-    // Selected tile
     drawSelectedTile();
 
     DrawRectangle(tileSetZoneWidth - 1, 0, 3, GetScreenHeight(), WHITE);
@@ -208,12 +203,14 @@ void TestScene::drawGui() {
     if (ImGui::Begin("Config", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
         if (ImGui::Button("New map")) {
             if (unsavedChanges) {
-                ImGui::OpenPopup("Confirm New Map");
+                ImGui::OpenPopup("New map: Warning");
             } else {
                 createNewMap();
             }
         }
-        ImGui::Separator();
+
+        ImGui::Spacing();
+        ImGui::Spacing();
 
         ImGui::Text("TileSet: %s", tileSetName.c_str());
         ImGui::Separator();
@@ -326,16 +323,21 @@ void TestScene::createNewMap() {
 
 void TestScene::confirmNewMap() {
     if (unsavedChanges) {
-        if (ImGui::BeginPopupModal("Confirm New Map", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("Hay cambios no guardados. ¿Deseas continuar?\nEsta acción descartará los cambios actuales.");
+        if (ImGui::BeginPopupModal("New map: Warning", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("There are unsaved changes. Do you want to continue?\nThis action will discard the current changes.");
             ImGui::Separator();
 
-            if (ImGui::Button("Yes", ImVec2(120, 0))) {
+            constexpr float buttonWidth = 60.0f;
+            const float spacing = ImGui::GetStyle().ItemSpacing.x;
+            const float totalWidth = 2 * buttonWidth + spacing;
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - totalWidth - ImGui::GetStyle().WindowPadding.x);
+
+            if (ImGui::Button("Yes", ImVec2(buttonWidth, 0))) {
                 createNewMap();
                 ImGui::CloseCurrentPopup();
             }
             ImGui::SameLine();
-            if (ImGui::Button("No", ImVec2(120, 0))) {
+            if (ImGui::Button("No", ImVec2(buttonWidth, 0))) {
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
