@@ -293,6 +293,27 @@ void TestScene::drawGui() {
         confirmNewMap();
     }
     ImGui::End();
+
+    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(299, 55), ImGuiCond_Always);
+    if (ImGui::Begin("TileSet Controls", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
+        if (ImGui::Button("Reset position")) {
+            cameraTileSet.target = {0, 0};
+            cameraTileSet.zoom = 1;
+        }
+    }
+    ImGui::End();
+
+    ImGui::SetNextWindowPos(ImVec2(302, 0), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth() - 602, 55), ImGuiCond_Always);
+    if (ImGui::Begin("TileMap Controls", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
+        if (ImGui::Button("Reset position")) {
+            cameraMap.target = {0, 0};
+            cameraMap.zoom = 1;
+        }
+    }
+    ImGui::End();
+
     rlImGuiEnd();
 }
 
