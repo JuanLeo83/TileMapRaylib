@@ -120,6 +120,8 @@ void TestScene::setTileData() {
 
     if (IsKeyDown(KEY_BACKSPACE)) {
         tileMap->setTile(tileX, tileY, NO_TILE, activeLayer);
+    } else if (IsKeyDown(KEY_LEFT_SHIFT)) {
+        tileMap->floodFill(tileX, tileY, activeLayer, selectedTile);
     } else {
         tileMap->setTile(tileX, tileY, selectedTile, activeLayer);
     }

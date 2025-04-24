@@ -168,3 +168,28 @@ void TileMap::removeLayer(const int layerIndex) {
 void TileMap::setTileMapName(const std::string &name) {
     tileMapName = name;
 }
+
+void TileMap::floodFill(int x, int y, int layer, int newTile) {
+    if (x < 0 || x >= mapWidthInTiles || y < 0 || y >= mapHeightInTiles) return;
+
+    int oldTile = layers[layer][y][x];
+    if (oldTile == newTile) return;
+
+    std::queue<std::pair<int, int>> queue;
+    queue.push({x, y});
+
+    while (!queue.empty()) {
+        auto [cx, cy] = queue.front();
+        queue.pop();
+
+        if (cx < 0 || cx >= mapWidthInTiles || cy < 0 || cy >= mapHeightInTiles) continue;
+        if (layers[layer][cy][cx] != oldTile) continue;
+
+        layers[layer][cy][cx] = newTile;
+
+        queue.push({cx + 1, cy});
+        queue.push({cx - 1, cy});
+        queue.push({cx, cy + 1});
+        queue.push({cx, cy - 1});
+    }
+}

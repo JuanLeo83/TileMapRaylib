@@ -81,4 +81,6 @@ public:
     std::string getTileMapName() const {
         return tileMapName;
     };
+
+    void floodFill(int x, int y, int layer, int newTile);
 };
