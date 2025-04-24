@@ -50,6 +50,9 @@ void TileMap::draw() {
 }
 
 void TileMap::loadMap(const std::string &filePath, const std::string &fileName, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight) {
+    if (tileSet.id != 0) {
+        UnloadTexture(tileSet);
+    }
     tiles = loadMapFromFile(filePath, tileSetPath, mapWidthInTiles, mapHeightInTiles, tileWidth, tileHeight);
     mapWidth = mapWidthInTiles;
     mapHeight = mapHeightInTiles;
@@ -60,7 +63,7 @@ void TileMap::loadMap(const std::string &filePath, const std::string &fileName, 
 
 }
 
-void TileMap::setTile(const float positionX, const float positionY, const int tileIndex) {
+void TileMap::setTile(const float &positionX, const float &positionY, const int &tileIndex) {
     const int col = static_cast<int>(positionX);
     const int row = static_cast<int>(positionY);
 
@@ -98,6 +101,9 @@ void TileMap::setMapHeight(const int &value) {
 }
 
 void TileMap::setTileSetPath(const std::string &value) {
+    if (tileSet.id != 0) {
+        UnloadTexture(tileSet);
+    }
     tileSetPath = value;
     tileSet = LoadTexture(tileSetPath.c_str());
     widthInTiles = tileSet.width / tileWidth;

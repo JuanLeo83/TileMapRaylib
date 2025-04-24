@@ -73,6 +73,7 @@ class TestScene final : public Scene {
 
 public:
     TestScene();
+    ~TestScene();
 
     void update(float deltaTime) override;
 

@@ -25,6 +25,11 @@ TestScene::TestScene() {
     worldPositionTileSet = GetScreenToWorld2D(GetMousePosition(), cameraTileSet);
 }
 
+TestScene::~TestScene() {
+    UnloadTexture(tileSet);
+    delete tileMap;
+}
+
 void TestScene::update(const float deltaTime) {
     if (ImGui::GetIO().WantCaptureMouse) return;
 
@@ -54,7 +59,6 @@ void TestScene::update(const float deltaTime) {
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && isMouseInsideTileMap()) {
         setTileData();
     }
-
 }
 
 void TestScene::draw() {
@@ -70,10 +74,6 @@ void TestScene::draw() {
 
 void TestScene::initCamera(Camera2D &camera) {
     camera = {};
-    camera.target.x = 0;
-    camera.target.y = 0;
-    camera.offset.x = 0;
-    camera.offset.y = 0;
     camera.zoom = 1;
 }
 
@@ -84,7 +84,8 @@ bool TestScene::isMouseInsideTileSetZone() const {
 
 bool TestScene::isMouseInsideTileSet() const {
     return worldPositionTileSet.x > 0 && worldPositionTileSet.x < tileSet.width && mousePosition.x < tileSetZoneWidth &&
-           worldPositionTileSet.y > 0 && worldPositionTileSet.y < tileSet.height && mousePosition.y < GetScreenHeight() * 0.8f;
+           worldPositionTileSet.y > 0 && worldPositionTileSet.y < tileSet.height && mousePosition.y < GetScreenHeight()
+           * 0.8f;
 }
 
 bool TestScene::isMouseInsideTileMapZone() const {
@@ -101,7 +102,7 @@ bool TestScene::isMouseInsideTileMap() const {
            static_cast<float>(worldHeight * tileHeight);
 }
 
-void TestScene::saveMap(const std::string &filePath,  const std::string &fileName) {
+void TestScene::saveMap(const std::string &filePath, const std::string &fileName) {
     saveMapToFile(*tileMap, filePath);
     tileMap->setTileMapName(fileName);
     unsavedChanges = false;
@@ -129,12 +130,16 @@ void TestScene::setTileData() {
 }
 
 void TestScene::moveCamera() {
+    Camera2D *camera = nullptr;
     if (isMouseInsideTileSetZone()) {
-        cameraTileSet.target.x -= GetMouseDelta().x / cameraTileSet.zoom;
-        cameraTileSet.target.y -= GetMouseDelta().y / cameraTileSet.zoom;
+        camera = &cameraTileSet;
     } else if (isMouseInsideTileMapZone()) {
-        cameraMap.target.x -= GetMouseDelta().x / cameraMap.zoom;
-        cameraMap.target.y -= GetMouseDelta().y / cameraMap.zoom;
+        camera = &cameraMap;
+    }
+
+    if (camera) {
+        camera->target.x -= GetMouseDelta().x / camera->zoom;
+        camera->target.y -= GetMouseDelta().y / camera->zoom;
     }
 }
 
@@ -324,7 +329,8 @@ void TestScene::createNewMap() {
 void TestScene::confirmNewMap() {
     if (unsavedChanges) {
         if (ImGui::BeginPopupModal("New map: Warning", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("There are unsaved changes. Do you want to continue?\nThis action will discard the current changes.");
+            ImGui::Text(
+                "There are unsaved changes. Do you want to continue?\nThis action will discard the current changes.");
             ImGui::Separator();
 
             constexpr float buttonWidth = 60.0f;

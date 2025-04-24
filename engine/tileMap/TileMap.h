@@ -36,7 +36,7 @@ public:
 
     void loadMap(const std::string &filePath,  const std::string &fileName, int &mapWidth, int &mapHeight, int &tileWidth, int &tileHeight);
 
-    void setTile(float positionX, float positionY, int tileIndex);
+    void setTile(const float &positionX, const float &positionY, const int &tileIndex);
 
     void setMapWidth(const int &value);
 
