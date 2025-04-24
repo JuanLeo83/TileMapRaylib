@@ -315,7 +315,7 @@ void TestScene::drawGuiTileSet() {
 
 void TestScene::drawGuiTileMap() {
     ImGui::SetNextWindowPos(ImVec2(302, 0), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth() - 602, 200), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth() - 602, 155), ImGuiCond_Always);
 
     if (ImGui::Begin("TileMap Controls", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
         if (ImGui::Button("Reset position")) {
