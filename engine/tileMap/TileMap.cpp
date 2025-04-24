@@ -172,11 +172,11 @@ void TileMap::setTileMapName(const std::string &name) {
 void TileMap::floodFill(int x, int y, int layer, int newTile) {
     if (x < 0 || x >= mapWidthInTiles || y < 0 || y >= mapHeightInTiles) return;
 
-    int oldTile = layers[layer][y][x];
+    const int oldTile = layers[layer][y][x];
     if (oldTile == newTile) return;
 
     std::queue<std::pair<int, int>> queue;
-    queue.push({x, y});
+    queue.emplace(x, y);
 
     while (!queue.empty()) {
         auto [cx, cy] = queue.front();
@@ -187,9 +187,9 @@ void TileMap::floodFill(int x, int y, int layer, int newTile) {
 
         layers[layer][cy][cx] = newTile;
 
-        queue.push({cx + 1, cy});
-        queue.push({cx - 1, cy});
-        queue.push({cx, cy + 1});
-        queue.push({cx, cy - 1});
+        queue.emplace(cx + 1, cy);
+        queue.emplace(cx - 1, cy);
+        queue.emplace(cx, cy + 1);
+        queue.emplace(cx, cy - 1);
     }
 }
