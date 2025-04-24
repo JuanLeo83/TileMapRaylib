@@ -8,8 +8,6 @@
 
 // TODO: seleccionar múltiples tiles a la vez para pintarlos de una vez (ya veremos cómo lo hago)
 // TODO: Añadir capas de tiles
-// TODO: cargar mapa
-// TODO: crear nuevo mapa
 // TODO: Autotiling
 
 TestScene::TestScene() {
@@ -108,9 +106,10 @@ bool TestScene::isMouseInsideTileMap() const {
            static_cast<float>(worldHeight * tileHeight);
 }
 
-void TestScene::save(const std::string &filePath,  const std::string &fileName) const {
+void TestScene::saveMap(const std::string &filePath,  const std::string &fileName) {
     saveMapToFile(*tileMap, filePath);
     tileMap->setTileMapName(fileName);
+    unsavedChanges = false;
 }
 
 void TestScene::selectTile() {
@@ -121,7 +120,7 @@ void TestScene::selectTile() {
     selectedTilePosition.y = tileY * tileHeight;
 }
 
-void TestScene::setTileData() const {
+void TestScene::setTileData() {
     const float tileX = (worldPositionMap.x - static_cast<float>(tileSetZoneWidth)) / static_cast<float>(tileWidth);
     const float tileY = worldPositionMap.y / static_cast<float>(tileHeight);
 
@@ -130,6 +129,8 @@ void TestScene::setTileData() const {
     } else {
         tileMap->setTile(tileX, tileY, selectedTile);
     }
+
+    unsavedChanges = true;
 }
 
 void TestScene::moveCamera() {
@@ -205,6 +206,15 @@ void TestScene::drawGui() {
     ImGui::SetNextWindowSize(ImVec2(300, GetScreenHeight()), ImGuiCond_Always);
 
     if (ImGui::Begin("Config", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
+        if (ImGui::Button("New map")) {
+            if (unsavedChanges) {
+                ImGui::OpenPopup("Confirm New Map");
+            } else {
+                createNewMap();
+            }
+        }
+        ImGui::Separator();
+
         ImGui::Text("TileSet: %s", tileSetName.c_str());
         ImGui::Separator();
         if (ImGui::Button("Select TileSet")) {
@@ -231,7 +241,16 @@ void TestScene::drawGui() {
         ImGui::Spacing();
         ImGui::Spacing();
         ImGui::Spacing();
-        ImGui::Text("TileMap: %s", tileMap->getTileMapName().c_str());
+        if (unsavedChanges) {
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255)); // Cambiar color a rojo
+            ImGui::Text("TileMap: %s*", tileMap->getTileMapName().c_str());
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("Unsaved changes");
+            }
+            ImGui::PopStyleColor();
+        } else {
+            ImGui::Text("TileMap: %s", tileMap->getTileMapName().c_str());
+        }
         ImGui::Separator();
 
         ImGui::InputInt("Tile width", &tileWidth);
@@ -263,11 +282,13 @@ void TestScene::drawGui() {
             if (ImGuiFileDialog::Instance()->IsOk()) {
                 const std::string savePath = ImGuiFileDialog::Instance()->GetFilePathName();
                 const std::string fileName = ImGuiFileDialog::Instance()->GetCurrentFileName();
-                save(savePath, fileName);
+                saveMap(savePath, fileName);
             }
 
             ImGuiFileDialog::Instance()->Close();
         }
+
+        confirmNewMap();
     }
     ImGui::End();
     rlImGuiEnd();
@@ -289,4 +310,35 @@ void TestScene::showLoadMapDialog() {
 void TestScene::loadMap(const std::string &filePath, const std::string &fileName) {
     tileMap->loadMap(filePath, fileName, worldWidth, worldHeight, tileWidth, tileHeight);
     tileSetName = tileSetPath.substr(tileSetPath.find_last_of("/\\") + 1);
+}
+
+void TestScene::createNewMap() {
+    worldWidth = 20;
+    worldHeight = 20;
+    tileWidth = 16;
+    tileHeight = 16;
+    tileMap->initEmptyTiles(worldWidth, worldHeight);
+    tileSetPath = "";
+    tileSetName = "";
+    unsavedChanges = false;
+    tileMap->setTileMapName("");
+}
+
+void TestScene::confirmNewMap() {
+    if (unsavedChanges) {
+        if (ImGui::BeginPopupModal("Confirm New Map", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Hay cambios no guardados. ¿Deseas continuar?\nEsta acción descartará los cambios actuales.");
+            ImGui::Separator();
+
+            if (ImGui::Button("Yes", ImVec2(120, 0))) {
+                createNewMap();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("No", ImVec2(120, 0))) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
 }

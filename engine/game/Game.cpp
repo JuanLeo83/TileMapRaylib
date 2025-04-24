@@ -5,6 +5,7 @@
 #include "rlImGui.h"
 
 Game::Game(const int width, const int height, const char *title) {
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(width, height, title);
     SetTargetFPS(60);
 

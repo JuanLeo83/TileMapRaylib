@@ -7,6 +7,8 @@
 #include "scene/Scene.h"
 
 class TestScene final : public Scene {
+    bool unsavedChanges = false;
+
     std::string assets = ASSETS;
     const int NO_TILE = -1;
     Camera2D cameraTileSelected{};
@@ -43,11 +45,11 @@ class TestScene final : public Scene {
 
     bool isMouseInsideTileMap() const;
 
-    void save(const std::string &filePath,  const std::string &fileName) const;
+    void saveMap(const std::string &filePath,  const std::string &fileName);
 
     void selectTile();
 
-    void setTileData() const;
+    void setTileData();
 
     void moveCamera();
 
@@ -64,6 +66,10 @@ class TestScene final : public Scene {
     static void showLoadMapDialog();
 
     void loadMap(const std::string &filePath,  const std::string &fileName);
+
+    void createNewMap();
+
+    void confirmNewMap();
 
 public:
     TestScene();
