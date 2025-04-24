@@ -1,9 +1,16 @@
 #include <raylib.h>
 #include "Game.h"
 
-Game::Game(const int width, const int height, const char* title) {
+#include "imgui.h"
+#include "rlImGui.h"
+
+Game::Game(const int width, const int height, const char *title) {
     InitWindow(width, height, title);
     SetTargetFPS(60);
+
+    ImGuiIO &io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigWindowsMoveFromTitleBarOnly = true;
 
     InitAudioDevice();
 }

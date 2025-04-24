@@ -13,7 +13,7 @@ class TestScene final : public Scene {
     Camera2D cameraTileSet{};
     Camera2D cameraMap{};
 
-    const int tileSetZoneWidth = 500;
+    const int tileSetZoneWidth = 300;
     std::string tileSetPath = "";
     Texture2D tileSet{};
     int tileSetWidthInTiles = 1;

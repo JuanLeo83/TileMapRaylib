@@ -18,7 +18,7 @@ TestScene::TestScene() {
     tileMap->setPosition({static_cast<float>(tileSetZoneWidth), 0});
     tileMap->initEmptyTiles(worldWidth, worldHeight);
 
-    // tileMap->loadMap("../assets/savedMap.tm", worldWidth, worldHeight, tileWidth, tileHeight);
+    tileMap->loadMap("../assets/savedMap.tm", worldWidth, worldHeight, tileWidth, tileHeight);
 
     initCamera(cameraMap);
     initCamera(cameraTileSet);
@@ -30,6 +30,8 @@ TestScene::TestScene() {
 }
 
 void TestScene::update(const float deltaTime) {
+    if (ImGui::GetIO().WantCaptureMouse) return;
+
     mousePosition = GetMousePosition();
     worldPositionMap = GetScreenToWorld2D(mousePosition, cameraMap);
     worldPositionTileSet = GetScreenToWorld2D(GetMousePosition(), cameraTileSet);
@@ -199,8 +201,11 @@ void TestScene::drawSelectedTile() const {
 
 void TestScene::drawGui() {
     rlImGuiBegin();
-    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Once);
-    if (ImGui::Begin("Config")) {
+
+    ImGui::SetNextWindowPos(ImVec2(GetScreenWidth() - 300, 0), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(300, GetScreenHeight()), ImGuiCond_Always);
+
+    if (ImGui::Begin("Config", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
         if (ImGui::Button("Select TileSet")) {
             IGFD::FileDialogConfig config;
             config.path = ".";
@@ -208,7 +213,7 @@ void TestScene::drawGui() {
         }
 
         if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
-            if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
+            if (ImGuiFileDialog::Instance()->IsOk()) {
                 tileSetPath = ImGuiFileDialog::Instance()->GetFilePathName();
                 tileMap->setTileSetPath(tileSetPath);
             }
