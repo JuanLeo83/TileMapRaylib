@@ -7,7 +7,6 @@
 #include "ImGuiFileDialog.h"
 
 // TODO: seleccionar múltiples tiles a la vez para pintarlos de una vez (ya veremos cómo lo hago)
-// TODO: Añadir capas de tiles
 // TODO: Autotiling
 
 TestScene::TestScene() {
