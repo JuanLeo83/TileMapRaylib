@@ -37,6 +37,7 @@ class TestScene final : public Scene {
 
     int activeLayer = 0;
     int targetLayer = 0;
+    int amountOfRandomTiles = 10;
 
     static void initCamera(Camera2D &camera);
 
@@ -79,6 +80,8 @@ class TestScene final : public Scene {
     void createNewMap();
 
     void confirmNewMap();
+
+    void paintRandomTiles(int count);
 
 public:
     TestScene();

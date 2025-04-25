@@ -317,7 +317,7 @@ void TestScene::drawGuiTileSet() {
 
 void TestScene::drawGuiTileMap() {
     ImGui::SetNextWindowPos(ImVec2(302, 0), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth() - 602, 155), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth() - 602, 215), ImGuiCond_Always);
 
     if (ImGui::Begin("TileMap Controls", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
         if (ImGui::Button("Reset position")) {
@@ -403,6 +403,14 @@ void TestScene::drawGuiTileMap() {
             }
         }
 
+
+        ImGui::Text("Fill random with selected tile:");
+        ImGui::SetNextItemWidth(100);
+        ImGui::InputInt("Amount: ", &amountOfRandomTiles);
+        if (ImGui::Button("Paint Random Tiles")) {
+            paintRandomTiles(amountOfRandomTiles);
+        }
+
         if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("You cannot move the content to the same layer.");
             ImGui::Separator();
@@ -476,4 +484,17 @@ void TestScene::confirmNewMap() {
             ImGui::EndPopup();
         }
     }
+}
+
+void TestScene::paintRandomTiles(int count) {
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
+
+    for (int i = 0; i < count; ++i) {
+        const int randomX = std::rand() % worldWidth;
+        const int randomY = std::rand() % worldHeight;
+
+        tileMap->setTile(randomX, randomY, selectedTile, activeLayer);
+    }
+
+    unsavedChanges = true;
 }
