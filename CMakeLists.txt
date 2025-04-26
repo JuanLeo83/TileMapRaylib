@@ -72,6 +72,8 @@ add_executable(Tileset main.cpp
         game/GameState.cpp
         game/Player.cpp
         game/Player.h
+        game/test/GuiManager.cpp
+        game/test/GuiManager.h
 )
 
 target_sources(Tileset PRIVATE

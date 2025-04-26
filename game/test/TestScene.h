@@ -4,13 +4,13 @@
 #include <string>
 #include <tileMap/TileMap.h>
 
+#include "GuiManager.h"
 #include "scene/Scene.h"
 
 class TestScene final : public Scene {
     bool unsavedChanges = false;
 
     std::string assets = ASSETS;
-    const int NO_TILE = -1;
     Camera2D cameraTileSelected{};
     Camera2D cameraTileSet{};
     Camera2D cameraMap{};
@@ -39,6 +39,8 @@ class TestScene final : public Scene {
     int targetLayer = 0;
     int amountOfRandomTiles = 10;
 
+    GuiManager *guiManager;
+
     static void initCamera(Camera2D &camera);
 
     bool isMouseInsideTileSetZone() const;
@@ -48,8 +50,6 @@ class TestScene final : public Scene {
     bool isMouseInsideTileMapZone() const;
 
     bool isMouseInsideTileMap() const;
-
-    void saveMap(const std::string &filePath, const std::string &fileName);
 
     void selectTile();
 
@@ -63,32 +63,94 @@ class TestScene final : public Scene {
 
     void drawSelectedTile() const;
 
-    void drawGui();
-
-    void drawGuiSettings();
-
-    void drawGuiTileSet();
-
-    void drawGuiTileMap();
-
-    static void showSaveMapDialog();
-
-    static void showLoadMapDialog();
-
-    void loadMap(const std::string &filePath, const std::string &fileName);
-
-    void createNewMap();
-
-    void confirmNewMap();
-
-    void paintRandomTiles(int count);
-
 public:
+    const int NO_TILE = -1;
+
     TestScene();
 
     ~TestScene() override;
 
+    [[nodiscard]] TileMap *getTileMap() const {
+        return tileMap;
+    }
+
     void update(float deltaTime) override;
 
     void draw() override;
+
+    void resetCameraTileSet() {
+        cameraTileSet.target = {0, 0};
+        cameraTileSet.zoom = 1;
+    }
+
+    void resetCameraMap() {
+        cameraMap.target = {0, 0};
+        cameraMap.zoom = 1;
+    }
+
+    void paintRandomTiles();
+
+    int &getActiveLayer() {
+        return activeLayer;
+    }
+
+    void setActiveLayer(const int layer){
+        activeLayer = layer;
+    }
+
+    int &getTargetLayer() {
+        return targetLayer;
+    }
+
+    void setTargetLayer(const int layer){
+        targetLayer = layer;
+    }
+
+    int &getWorldWidth() {
+        return worldWidth;
+    }
+
+    void setWorldWidth(const int width) {
+        worldWidth = width;
+    }
+
+    int &getWorldHeight() {
+        return worldHeight;
+    }
+
+    void setWorldHeight(const int height) {
+        worldHeight = height;
+    }
+
+    int &getAmountOfRandomTiles() {
+        return amountOfRandomTiles;
+    }
+
+    int &getTileWidth() {
+        return tileWidth;
+    }
+
+    int &getTileHeight() {
+        return tileHeight;
+    }
+
+    std::string &getTileSetName() {
+        return tileSetName;
+    }
+
+    void setTileSetName(const std::string &name) {
+        tileSetName = name;
+    }
+
+    void setTileSetPath(const std::string &path);
+
+    void createNewMap();
+
+    void loadMap(const std::string &filePath, const std::string &fileName);
+
+    void saveMap(const std::string &filePath, const std::string &fileName);
+
+    bool &getUnsavedChanges() {
+        return unsavedChanges;
+    }
 };
