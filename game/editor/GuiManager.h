@@ -1,6 +1,6 @@
 #pragma once
 
-class TestScene;
+class EditorScene;
 
 class GuiManager {
     static constexpr auto REMOVE_LAYER_CONFIRMATION = "Remove layer confirmation";
@@ -10,7 +10,7 @@ class GuiManager {
     static constexpr auto LOAD_MAP = "LoadMapDlgKey";
     static constexpr auto SAVE_MAP = "SaveMapDlgKey";
 
-    TestScene *testScene;
+    EditorScene *editor;
 
     void drawGuiTileSet() const;
 
@@ -37,7 +37,7 @@ class GuiManager {
     void confirmNewMapDialog() const;
 
 public:
-    explicit GuiManager(TestScene *testScene);
+    explicit GuiManager(EditorScene *testScene);
 
     static bool hasMouseFocus();
 

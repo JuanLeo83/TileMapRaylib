@@ -3,9 +3,9 @@
 #include "imgui.h"
 #include "ImGuiFileDialog.h"
 #include "rlImGui.h"
-#include "TestScene.h"
+#include "EditorScene.h"
 
-GuiManager::GuiManager(TestScene *testScene) : testScene(testScene) {
+GuiManager::GuiManager(EditorScene *testScene) : editor(testScene) {
 }
 
 bool GuiManager::hasMouseFocus() {
@@ -24,11 +24,15 @@ void GuiManager::drawGui() const {
 
 void GuiManager::drawGuiTileSet() const {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(299, 55), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(299, 90), ImGuiCond_Always);
     if (ImGui::Begin("TileSet Controls", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
         if (ImGui::Button("Reset position")) {
-            testScene->resetCameraTileSet();
+            editor->resetCameraTileSet();
         }
+
+        sectionSeparator();
+
+        ImGui::Checkbox("Autotiling", &editor->getAutotiling());
     }
     ImGui::End();
 }
@@ -39,7 +43,7 @@ void GuiManager::drawGuiTileMap() const {
 
     if (ImGui::Begin("TileMap Controls", nullptr, ImGuiWindowFlags_NoMove)) {
         if (ImGui::Button("Reset position")) {
-            testScene->resetCameraMap();
+            editor->resetCameraMap();
         }
 
         ImGui::Spacing();
@@ -57,11 +61,11 @@ void GuiManager::drawGuiTileMap() const {
 void GuiManager::activeLayerControls() const {
     ImGui::Text("Active layer:");
     ImGui::SetNextItemWidth(100);
-    if (ImGui::BeginCombo("##activeLayer", std::to_string(testScene->getActiveLayer()).c_str())) {
-        for (int i = 0; i < testScene->getTileMap()->getLayers().size(); ++i) {
-            const bool isSelected = testScene->getActiveLayer() == i;
+    if (ImGui::BeginCombo("##activeLayer", std::to_string(editor->getActiveLayer()).c_str())) {
+        for (int i = 0; i < editor->getTileMap()->getLayers().size(); ++i) {
+            const bool isSelected = editor->getActiveLayer() == i;
             if (ImGui::Selectable(std::to_string(i).c_str(), isSelected)) {
-                testScene->setActiveLayer(i);
+                editor->setActiveLayer(i);
             }
             if (isSelected) {
                 ImGui::SetItemDefaultFocus();
@@ -71,7 +75,7 @@ void GuiManager::activeLayerControls() const {
     }
     ImGui::SameLine();
     if (ImGui::Button("Add layer")) {
-        testScene->getTileMap()->addLayer();
+        editor->getTileMap()->addLayer();
     }
     ImGui::SameLine();
     if (ImGui::Button("Remove layer")) {
@@ -93,8 +97,8 @@ void GuiManager::removeLayerConfirmationDialog() const {
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() - totalWidth - ImGui::GetStyle().WindowPadding.x);
 
         if (ImGui::Button("Yes", ImVec2(60, 0))) {
-            testScene->getTileMap()->removeLayer(testScene->getActiveLayer());
-            testScene->setActiveLayer(std::max(0, testScene->getActiveLayer() - 1));
+            editor->getTileMap()->removeLayer(editor->getActiveLayer());
+            editor->setActiveLayer(std::max(0, editor->getActiveLayer() - 1));
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
@@ -110,11 +114,11 @@ void GuiManager::moveContentLayerControls() const {
     ImGui::Text("Move content from selected layer to:");
 
     ImGui::SetNextItemWidth(100);
-    if (ImGui::BeginCombo("##targetLayer", std::to_string(testScene->getTargetLayer()).c_str())) {
-        for (int i = 0; i < testScene->getTileMap()->getLayers().size(); ++i) {
-            const bool isSelected = (testScene->getTargetLayer() == i);
+    if (ImGui::BeginCombo("##targetLayer", std::to_string(editor->getTargetLayer()).c_str())) {
+        for (int i = 0; i < editor->getTileMap()->getLayers().size(); ++i) {
+            const bool isSelected = (editor->getTargetLayer() == i);
             if (ImGui::Selectable(std::to_string(i).c_str(), isSelected)) {
-                testScene->setTargetLayer(i);
+                editor->setTargetLayer(i);
             }
             if (isSelected) {
                 ImGui::SetItemDefaultFocus();
@@ -126,12 +130,12 @@ void GuiManager::moveContentLayerControls() const {
     ImGui::SameLine();
 
     if (ImGui::Button("Move content")) {
-        if (testScene->getActiveLayer() != testScene->getTargetLayer()) {
-            auto &layers = testScene->getTileMap()->getLayers();
-            layers[testScene->getTargetLayer()] = layers[testScene->getActiveLayer()];
-            layers[testScene->getActiveLayer()] = std::vector(
-                testScene->getWorldHeight(),
-                std::vector(testScene->getWorldWidth(), testScene->NO_TILE)
+        if (editor->getActiveLayer() != editor->getTargetLayer()) {
+            auto &layers = editor->getTileMap()->getLayers();
+            layers[editor->getTargetLayer()] = layers[editor->getActiveLayer()];
+            layers[editor->getActiveLayer()] = std::vector(
+                editor->getWorldHeight(),
+                std::vector(editor->getWorldWidth(), editor->NO_TILE)
             );
         } else {
             ImGui::OpenPopup(MOVE_CONTENT_ERROR);
@@ -161,9 +165,9 @@ void GuiManager::moveContentLayerErrorDialog() {
 void GuiManager::fillRandomTilesControls() const {
     ImGui::Text("Fill random with selected tile:");
     ImGui::SetNextItemWidth(100);
-    ImGui::InputInt("Amount: ", &testScene->getAmountOfRandomTiles());
+    ImGui::InputInt("Amount: ", &editor->getAmountOfRandomTiles());
     if (ImGui::Button("Paint Random Tiles")) {
-        testScene->paintRandomTiles();
+        editor->paintRandomTiles();
     }
 }
 
@@ -179,17 +183,17 @@ void GuiManager::drawGuiSettings() const {
 
     if (ImGui::Begin("Config", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
         if (ImGui::Button("New map")) {
-            if (testScene->getUnsavedChanges()) {
+            if (editor->getUnsavedChanges()) {
                 ImGui::OpenPopup(NEW_MAP_WARNING);
             } else {
-                testScene->createNewMap();
+                editor->createNewMap();
             }
         }
 
         ImGui::Spacing();
         ImGui::Spacing();
 
-        ImGui::Text("TileSet: %s", testScene->getTileSetName().c_str());
+        ImGui::Text("TileSet: %s", editor->getTileSetName().c_str());
         ImGui::Separator();
         if (ImGui::Button("Select TileSet")) {
             IGFD::FileDialogConfig config;
@@ -197,28 +201,28 @@ void GuiManager::drawGuiSettings() const {
             ImGuiFileDialog::Instance()->OpenDialog(SELECT_TILESET, "Choose File", ".png,.jpeg,.jpg,.*", config);
         }
 
-        ImGui::InputInt("Map width", &testScene->getWorldWidth());
-        ImGui::InputInt("Map height", &testScene->getWorldHeight());
+        ImGui::InputInt("Map width", &editor->getWorldWidth());
+        ImGui::InputInt("Map height", &editor->getWorldHeight());
 
         ImGui::Spacing();
         ImGui::Spacing();
         ImGui::Spacing();
         ImGui::Spacing();
         ImGui::Spacing();
-        if (testScene->getUnsavedChanges()) {
+        if (editor->getUnsavedChanges()) {
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255)); // Cambiar color a rojo
-            ImGui::Text("TileMap: %s*", testScene->getTileMap()->getTileMapName().c_str());
+            ImGui::Text("TileMap: %s*", editor->getTileMap()->getTileMapName().c_str());
             if (ImGui::IsItemHovered()) {
                 ImGui::SetTooltip("Unsaved changes");
             }
             ImGui::PopStyleColor();
         } else {
-            ImGui::Text("TileMap: %s", testScene->getTileMap()->getTileMapName().c_str());
+            ImGui::Text("TileMap: %s", editor->getTileMap()->getTileMapName().c_str());
         }
         ImGui::Separator();
 
-        ImGui::InputInt("Tile width", &testScene->getTileWidth());
-        ImGui::InputInt("Tile height", &testScene->getTileHeight());
+        ImGui::InputInt("Tile width", &editor->getTileWidth());
+        ImGui::InputInt("Tile height", &editor->getTileHeight());
 
         ImGui::Spacing();
         ImGui::Spacing();
@@ -234,7 +238,7 @@ void GuiManager::drawGuiSettings() const {
 
         if (ImGuiFileDialog::Instance()->Display(LOAD_MAP)) {
             if (ImGuiFileDialog::Instance()->IsOk()) {
-                testScene->loadMap(
+                editor->loadMap(
                     ImGuiFileDialog::Instance()->GetFilePathName(),
                     ImGuiFileDialog::Instance()->GetCurrentFileName()
                 );
@@ -245,7 +249,7 @@ void GuiManager::drawGuiSettings() const {
 
         if (ImGuiFileDialog::Instance()->Display(SAVE_MAP)) {
             if (ImGuiFileDialog::Instance()->IsOk()) {
-                testScene->saveMap(
+                editor->saveMap(
                     ImGuiFileDialog::Instance()->GetFilePathName(),
                     ImGuiFileDialog::Instance()->GetCurrentFileName()
                 );
@@ -263,8 +267,8 @@ void GuiManager::drawGuiSettings() const {
 void GuiManager::selectTileSetDialog() const {
     if (ImGuiFileDialog::Instance()->Display(SELECT_TILESET)) {
         if (ImGuiFileDialog::Instance()->IsOk()) {
-            testScene->setTileSetPath(ImGuiFileDialog::Instance()->GetFilePathName());
-            testScene->setTileSetName(ImGuiFileDialog::Instance()->GetCurrentFileName());
+            editor->setTileSetPath(ImGuiFileDialog::Instance()->GetFilePathName());
+            editor->setTileSetName(ImGuiFileDialog::Instance()->GetCurrentFileName());
         }
 
         ImGuiFileDialog::Instance()->Close();
@@ -284,7 +288,7 @@ void GuiManager::showSaveMapDialog() {
 }
 
 void GuiManager::confirmNewMapDialog() const {
-    if (testScene->getUnsavedChanges()) {
+    if (editor->getUnsavedChanges()) {
         if (ImGui::BeginPopupModal(NEW_MAP_WARNING, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text(
                 "There are unsaved changes. Do you want to continue?\nThis action will discard the current changes.");
@@ -297,7 +301,7 @@ void GuiManager::confirmNewMapDialog() const {
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() - totalWidth - ImGui::GetStyle().WindowPadding.x);
 
             if (ImGui::Button("Yes", ImVec2(buttonWidth, 0))) {
-                testScene->createNewMap();
+                editor->createNewMap();
                 ImGui::CloseCurrentPopup();
             }
             ImGui::SameLine();

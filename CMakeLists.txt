@@ -65,15 +65,15 @@ add_executable(Tileset main.cpp
         engine/animation/Animator.cpp
         engine/animation/Animation.cpp
         engine/tileMap/TileMap.cpp
-        game/test/TestScene.cpp
-        game/test/TestScene.h
-        game/test/TestSceneType.cpp
-        game/test/TestSceneType.h
+        game/editor/EditorScene.cpp
+        game/editor/EditorScene.h
+        game/editor/TestSceneType.cpp
+        game/editor/TestSceneType.h
         game/GameState.cpp
         game/Player.cpp
         game/Player.h
-        game/test/GuiManager.cpp
-        game/test/GuiManager.h
+        game/editor/GuiManager.cpp
+        game/editor/GuiManager.h
 )
 
 target_sources(Tileset PRIVATE

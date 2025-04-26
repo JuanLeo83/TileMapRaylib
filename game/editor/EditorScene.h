@@ -7,7 +7,7 @@
 #include "GuiManager.h"
 #include "scene/Scene.h"
 
-class TestScene final : public Scene {
+class EditorScene final : public Scene {
     bool unsavedChanges = false;
 
     std::string assets = ASSETS;
@@ -41,6 +41,8 @@ class TestScene final : public Scene {
 
     GuiManager *guiManager;
 
+    bool autoTiling = false;
+
     static void initCamera(Camera2D &camera);
 
     bool isMouseInsideTileSetZone() const;
@@ -66,9 +68,9 @@ class TestScene final : public Scene {
 public:
     const int NO_TILE = -1;
 
-    TestScene();
+    EditorScene();
 
-    ~TestScene() override;
+    ~EditorScene() override;
 
     [[nodiscard]] TileMap *getTileMap() const {
         return tileMap;
@@ -152,5 +154,9 @@ public:
 
     bool &getUnsavedChanges() {
         return unsavedChanges;
+    }
+
+    bool &getAutotiling() {
+        return autoTiling;
     }
 };

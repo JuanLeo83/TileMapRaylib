@@ -1,4 +1,4 @@
-#include "TestScene.h"
+#include "EditorScene.h"
 
 #include <raylib.h>
 #include <tileMap/TileMapUtils.h>
@@ -7,7 +7,7 @@
 // TODO: seleccionar múltiples tiles a la vez para pintarlos de una vez (ya veremos cómo lo hago)
 // TODO: Autotiling
 
-TestScene::TestScene() {
+EditorScene::EditorScene() {
     tileSet = LoadTexture(tileSetPath.c_str());
     tileMap = new TileMap(tileSetPath, tileSet, tileSetWidthInTiles, tileSetHeightInTiles, tileWidth, tileHeight);
     tileMap->setPosition({static_cast<float>(tileSetZoneWidth), 0});
@@ -24,12 +24,13 @@ TestScene::TestScene() {
     guiManager = new GuiManager(this);
 }
 
-TestScene::~TestScene() {
+EditorScene::~EditorScene() {
     UnloadTexture(tileSet);
+    delete guiManager;
     delete tileMap;
 }
 
-void TestScene::update(const float deltaTime) {
+void EditorScene::update(const float deltaTime) {
     if (GuiManager::hasMouseFocus()) return;
 
     mousePosition = GetMousePosition();
@@ -60,7 +61,7 @@ void TestScene::update(const float deltaTime) {
     }
 }
 
-void TestScene::draw() {
+void EditorScene::draw() {
     drawMap();
     drawTileSet();
     drawSelectedTile();
@@ -71,28 +72,28 @@ void TestScene::draw() {
     guiManager->drawGui();
 }
 
-void TestScene::initCamera(Camera2D &camera) {
+void EditorScene::initCamera(Camera2D &camera) {
     camera = {};
     camera.zoom = 1;
 }
 
-bool TestScene::isMouseInsideTileSetZone() const {
+bool EditorScene::isMouseInsideTileSetZone() const {
     return mousePosition.x > 0 && mousePosition.x < static_cast<float>(tileSetZoneWidth) &&
            mousePosition.y > 0 && mousePosition.y < static_cast<float>(GetScreenHeight()) * 0.8f;
 }
 
-bool TestScene::isMouseInsideTileSet() const {
+bool EditorScene::isMouseInsideTileSet() const {
     return worldPositionTileSet.x > 0 && worldPositionTileSet.x < tileSet.width && mousePosition.x < tileSetZoneWidth &&
            worldPositionTileSet.y > 0 && worldPositionTileSet.y < tileSet.height && mousePosition.y < GetScreenHeight()
            * 0.8f;
 }
 
-bool TestScene::isMouseInsideTileMapZone() const {
+bool EditorScene::isMouseInsideTileMapZone() const {
     return mousePosition.x > static_cast<float>(tileSetZoneWidth) && mousePosition.x < static_cast<float>(
                GetScreenWidth());
 }
 
-bool TestScene::isMouseInsideTileMap() const {
+bool EditorScene::isMouseInsideTileMap() const {
     return worldPositionMap.x > tileMap->getPosition().x && worldPositionMap.x < tileMap->getPosition().x +
            static_cast<float>(worldWidth * tileWidth)
            &&
@@ -100,21 +101,31 @@ bool TestScene::isMouseInsideTileMap() const {
            static_cast<float>(worldHeight * tileHeight);
 }
 
-void TestScene::saveMap(const std::string &filePath, const std::string &fileName) {
+void EditorScene::saveMap(const std::string &filePath, const std::string &fileName) {
     saveMapToFile(*tileMap, filePath);
     tileMap->setTileMapName(fileName);
     unsavedChanges = false;
 }
 
-void TestScene::selectTile() {
+void EditorScene::selectTile() {
     const int tileX = worldPositionTileSet.x / tileWidth;
     const int tileY = worldPositionTileSet.y / tileHeight;
     selectedTile = tileY * tileSet.width / tileWidth + tileX;
-    selectedTilePosition.x = tileX * tileWidth;
-    selectedTilePosition.y = tileY * tileHeight;
+
+    // ReSharper disable once CppDFAConstantConditions
+    if (autoTiling) {
+        // ReSharper disable once CppDFAUnreachableCode
+        const int autoTileBlock = selectedTile / 48;
+        selectedTile = autoTileBlock * 48;
+        selectedTilePosition.x = 0;
+        selectedTilePosition.y = autoTileBlock * 4 * tileHeight;
+    } else {
+        selectedTilePosition.x = tileX * tileWidth;
+        selectedTilePosition.y = tileY * tileHeight;
+    }
 }
 
-void TestScene::setTileData() {
+void EditorScene::setTileData() {
     const float tileX = (worldPositionMap.x - static_cast<float>(tileSetZoneWidth)) / static_cast<float>(tileWidth);
     const float tileY = worldPositionMap.y / static_cast<float>(tileHeight);
 
@@ -129,7 +140,7 @@ void TestScene::setTileData() {
     unsavedChanges = true;
 }
 
-void TestScene::moveCamera() {
+void EditorScene::moveCamera() {
     Camera2D *camera = nullptr;
     if (isMouseInsideTileSetZone()) {
         camera = &cameraTileSet;
@@ -143,7 +154,7 @@ void TestScene::moveCamera() {
     }
 }
 
-void TestScene::drawMap() const {
+void EditorScene::drawMap() const {
     BeginScissorMode(tileSetZoneWidth, 0, GetScreenWidth(), GetScreenHeight());
     BeginMode2D(cameraMap);
     tileMap->draw(activeLayer);
@@ -159,7 +170,7 @@ void TestScene::drawMap() const {
     EndScissorMode();
 }
 
-void TestScene::drawTileSet() const {
+void EditorScene::drawTileSet() const {
     BeginScissorMode(0, 0, tileSetZoneWidth, GetScreenHeight() * 0.8f);
     DrawRectangle(0, 0, tileSetZoneWidth, GetScreenHeight() * 0.8f, BLACK);
     BeginMode2D(cameraTileSet);
@@ -177,7 +188,7 @@ void TestScene::drawTileSet() const {
     EndScissorMode();
 }
 
-void TestScene::drawSelectedTile() const {
+void EditorScene::drawSelectedTile() const {
     BeginScissorMode(0, GetScreenHeight() * 0.8f, tileSetZoneWidth, GetScreenHeight() * 0.2f);
     BeginMode2D(cameraTileSelected);
     DrawRectangle(0, GetScreenHeight() * 0.8f, tileSetZoneWidth, GetScreenHeight() * 0.2f, BLACK);
@@ -199,13 +210,13 @@ void TestScene::drawSelectedTile() const {
     EndScissorMode();
 }
 
-void TestScene::loadMap(const std::string &filePath, const std::string &fileName) {
+void EditorScene::loadMap(const std::string &filePath, const std::string &fileName) {
     int layerCount = 0;
     tileMap->loadMap(filePath, fileName, worldWidth, worldHeight, tileWidth, tileHeight, layerCount);
     tileSetName = tileSetPath.substr(tileSetPath.find_last_of("/\\") + 1);
 }
 
-void TestScene::createNewMap() {
+void EditorScene::createNewMap() {
     worldWidth = 20;
     worldHeight = 20;
     tileWidth = 16;
@@ -217,7 +228,7 @@ void TestScene::createNewMap() {
     tileMap->setTileMapName("");
 }
 
-void TestScene::paintRandomTiles() {
+void EditorScene::paintRandomTiles() {
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
     for (int i = 0; i < amountOfRandomTiles; ++i) {
@@ -230,7 +241,7 @@ void TestScene::paintRandomTiles() {
     unsavedChanges = true;
 }
 
-void TestScene::setTileSetPath(const std::string &path) {
+void EditorScene::setTileSetPath(const std::string &path) {
     tileSetPath = path;
     tileMap->setTileSetPath(path);
 }

@@ -1,9 +1,9 @@
 #include "gameState/GameState.h"
 
-#include "test/TestScene.h"
+#include "editor/EditorScene.h"
 
 GameState::GameState() {
-    currentScene = new TestScene();
+    currentScene = new EditorScene();
 }
 
 void GameState::update(float deltaTime) {
