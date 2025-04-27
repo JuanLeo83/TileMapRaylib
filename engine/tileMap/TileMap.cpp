@@ -41,10 +41,9 @@ void TileMap::draw(const int &activeLayer) {
                 srcRect.x = static_cast<float>((tileIndex - tileRow * widthInTiles) * tileWidth);
                 srcRect.y = static_cast<float>(tileRow * tileHeight);
 
-                // Aplicar transparencia si la capa está por encima de la seleccionada
-                Color tint = WHITE;
+                auto tint = WHITE;
                 if (layerIndex > activeLayer) {
-                    tint.a = 150; // Ajustar el nivel de transparencia (0-255)
+                    tint.a = 150;
                 }
 
                 DrawTextureRec(
@@ -56,14 +55,13 @@ void TileMap::draw(const int &activeLayer) {
             }
         }
 
-        // Oscurecer la capa si está por debajo de la seleccionada
         if (layerIndex < activeLayer) {
             DrawRectangle(
                 static_cast<int>(mapPosition.x),
                 static_cast<int>(mapPosition.y),
                 mapWidthInTiles * tileWidth,
                 mapHeightInTiles * tileHeight,
-                {0, 0, 0, 100} // Color negro semitransparente
+                {0, 0, 0, 100}
             );
         }
     }
@@ -98,7 +96,7 @@ void TileMap::setMapWidth(const int &value) {
     for (auto &layer : layers) {
         for (auto &row : layer) {
             if (mapWidthInTiles < value) {
-                row.resize(value, NO_TILE); // Expandir con NO_TILE
+                row.resize(value, NO_TILE);
             } else {
                 row.resize(value); // Reducir el tamaño
             }
@@ -113,9 +111,9 @@ void TileMap::setMapHeight(const int &value) {
 
     for (auto &layer : layers) {
         if (mapHeightInTiles < value) {
-            layer.resize(value, std::vector<int>(mapWidthInTiles, NO_TILE)); // Expandir con NO_TILE
+            layer.resize(value, std::vector(mapWidthInTiles, NO_TILE));
         } else {
-            layer.resize(value); // Reducir el tamaño
+            layer.resize(value);
         }
     }
 

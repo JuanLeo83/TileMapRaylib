@@ -13,7 +13,7 @@ Player::Player() {
     animator->setCurrentAnimation(2);
 }
 
-void Player::update(const float deltaTime) {
+void Player::update(const float deltaTime) const {
     animator->update(deltaTime);
 
     if (IsKeyDown(KEY_I)) {

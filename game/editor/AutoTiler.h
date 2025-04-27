@@ -263,6 +263,8 @@ class AutoTiler {
 
     void setAutoTile(float tileX, float tileY, int tileId, int layer);
 
+    void setAutoTileCell(float tileX, float tileY, int tileId, int layer);
+
 public:
     explicit AutoTiler(TileMap *tileMap, bool &autoTiling);
 

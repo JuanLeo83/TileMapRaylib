@@ -5,16 +5,12 @@
 #include "GuiManager.h"
 
 // TODO: seleccionar múltiples tiles a la vez para pintarlos de una vez (ya veremos cómo lo hago)
-// TODO: Autotiling
 
 EditorScene::EditorScene() {
     tileSet = LoadTexture(tileSetPath.c_str());
     tileMap = new TileMap(tileSetPath, tileSet, tileSetWidthInTiles, tileSetHeightInTiles, tileWidth, tileHeight);
     tileMap->setPosition({static_cast<float>(tileSetZoneWidth), 0});
     tileMap->initEmptyTiles(worldWidth, worldHeight, 1);
-
-    setTileSetPath("../assets/AutotileExample.png");
-    autoTiling = true;
 
     initCamera(cameraMap);
     initCamera(cameraTileSet);

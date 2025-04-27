@@ -9,7 +9,7 @@ class Player {
 public:
     Player();
 
-    void update(float deltaTime);
+    void update(float deltaTime) const;
 
     void draw() const;
 };

@@ -17,6 +17,32 @@ void AutoTiler::setNormalTile(const float tileX, const float tileY, const int ti
 }
 
 void AutoTiler::setAutoTile(const float tileX, const float tileY, const int tileId, const int layer) {
+    setAutoTileCell(tileX, tileY, tileId, layer);
+
+    for (int dRow = -1; dRow <= 1; ++dRow) {
+        for (int dCol = -1; dCol <= 1; ++dCol) {
+            if (dRow == 0 && dCol == 0) continue;
+
+            const float neighborX = tileX + dCol;
+            const float neighborY = tileY + dRow;
+
+            const auto &tiles = tileMap->getLayers()[layer];
+
+            if (neighborY >= 0 && neighborY < tiles.size() &&
+                neighborX >= 0 && neighborX < tiles[neighborY].size()) {
+                const auto neighborTileId = tiles[static_cast<int>(neighborY)][static_cast<int>(neighborX)];
+                if (neighborTileId != -1 && tileId != -1 && neighborTileId / 48 * 48 == tileId) {
+                    setAutoTileCell(neighborX, neighborY, tileId, layer);
+                } else if (tileId == -1 && neighborTileId != -1) {
+                    int newId = neighborTileId / 48 * 48;
+                    setAutoTileCell(neighborX, neighborY, newId, layer);
+                }
+            }
+        }
+    }
+}
+
+void AutoTiler::setAutoTileCell(const float tileX, const float tileY, const int tileId, const int layer) {
     const auto tiles = tileMap->getLayers()[layer];
 
     const int startRow = static_cast<int>(tileY) - 1;
@@ -52,12 +78,4 @@ void AutoTiler::setAutoTile(const float tileX, const float tileY, const int tile
 
     const int newTileId = tileId + tileMasks[bitMask];
     tileMap->setTile(tileX, tileY, newTileId, layer);
-
-    // Repintar los 8 vecinos
-    for (int dRow = -1; dRow <= 1; ++dRow) {
-        for (int dCol = -1; dCol <= 1; ++dCol) {
-            // setAutoTile(tileX + dCol, tileY + dRow, tileId, layer);
-        }
-    }
-
 }

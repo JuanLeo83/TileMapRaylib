@@ -6,7 +6,7 @@ GameState::GameState() {
     currentScene = new EditorScene();
 }
 
-void GameState::update(float deltaTime) {
+void GameState::update(float deltaTime) const {
     currentScene->update(deltaTime);
 }
 

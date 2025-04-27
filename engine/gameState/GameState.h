@@ -19,11 +19,11 @@ class GameState {
 public:
     explicit GameState();
 
-    void update(float deltaTime);
+    void update(float deltaTime) const;
 
     void draw() const {
         currentScene->draw();
     }
 
-    void changeScene(SceneType &newSceneType);
+    static void changeScene(SceneType &newSceneType);
 };
