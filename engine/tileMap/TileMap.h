@@ -19,6 +19,8 @@ class TileMap {
     int mapHeightInTiles;
     Rectangle srcRect = {};
 
+    unsigned char otherLayersOpacity = 100;
+
     const int NO_TILE = -1;
 
     Vector2 mapPosition = {0, 0};
@@ -83,4 +85,8 @@ public:
     };
 
     void floodFill(int x, int y, int layer, int newTile);
+
+    unsigned char &getOtherLayersOpacity() {
+        return otherLayersOpacity;
+    }
 };

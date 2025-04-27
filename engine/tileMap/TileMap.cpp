@@ -43,7 +43,7 @@ void TileMap::draw(const int &activeLayer) {
 
                 auto tint = WHITE;
                 if (layerIndex > activeLayer) {
-                    tint.a = 150;
+                    tint.a = 255 - otherLayersOpacity;
                 }
 
                 DrawTextureRec(
@@ -61,7 +61,7 @@ void TileMap::draw(const int &activeLayer) {
                 static_cast<int>(mapPosition.y),
                 mapWidthInTiles * tileWidth,
                 mapHeightInTiles * tileHeight,
-                {0, 0, 0, 100}
+                {0, 0, 0, otherLayersOpacity}
             );
         }
     }

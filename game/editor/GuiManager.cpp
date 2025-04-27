@@ -82,6 +82,8 @@ void GuiManager::activeLayerControls() const {
         ImGui::OpenPopup(REMOVE_LAYER_CONFIRMATION);
     }
 
+    ImGui::SliderInt("Other layers opacity", reinterpret_cast<int *>(&editor->getTileMap()->getOtherLayersOpacity()), 0, 255);
+
     removeLayerConfirmationDialog();
 }
 
