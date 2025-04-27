@@ -13,6 +13,9 @@ EditorScene::EditorScene() {
     tileMap->setPosition({static_cast<float>(tileSetZoneWidth), 0});
     tileMap->initEmptyTiles(worldWidth, worldHeight, 1);
 
+    setTileSetPath("../assets/AutotileExample.png");
+    autoTiling = true;
+
     initCamera(cameraMap);
     initCamera(cameraTileSet);
     initCamera(cameraTileSelected);
@@ -22,6 +25,7 @@ EditorScene::EditorScene() {
     worldPositionTileSet = GetScreenToWorld2D(GetMousePosition(), cameraTileSet);
 
     guiManager = new GuiManager(this);
+    autoTiler = new AutoTiler(tileMap, autoTiling);
 }
 
 EditorScene::~EditorScene() {
@@ -130,11 +134,11 @@ void EditorScene::setTileData() {
     const float tileY = worldPositionMap.y / static_cast<float>(tileHeight);
 
     if (IsKeyDown(KEY_BACKSPACE)) {
-        tileMap->setTile(tileX, tileY, NO_TILE, activeLayer);
+        autoTiler->setTile(tileX, tileY, NO_TILE, activeLayer);
     } else if (IsKeyDown(KEY_LEFT_SHIFT)) {
         tileMap->floodFill(tileX, tileY, activeLayer, selectedTile);
     } else {
-        tileMap->setTile(tileX, tileY, selectedTile, activeLayer);
+        autoTiler->setTile(tileX, tileY, selectedTile, activeLayer);
     }
 
     unsavedChanges = true;

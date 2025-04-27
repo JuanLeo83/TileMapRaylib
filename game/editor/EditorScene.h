@@ -4,6 +4,7 @@
 #include <string>
 #include <tileMap/TileMap.h>
 
+#include "AutoTiler.h"
 #include "GuiManager.h"
 #include "scene/Scene.h"
 
@@ -40,6 +41,7 @@ class EditorScene final : public Scene {
     int amountOfRandomTiles = 10;
 
     GuiManager *guiManager;
+    AutoTiler *autoTiler;
 
     bool autoTiling = false;
 

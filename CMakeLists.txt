@@ -74,6 +74,8 @@ add_executable(Tileset main.cpp
         game/Player.h
         game/editor/GuiManager.cpp
         game/editor/GuiManager.h
+        game/editor/AutoTiler.cpp
+        game/editor/AutoTiler.h
 )
 
 target_sources(Tileset PRIVATE
