@@ -5,7 +5,7 @@
 
 int main() {
     rlImGuiSetup(true);
-    auto game = Game(1280, 720, "Tileset Editor");
+    auto game = Game(1280, 720, "MoonMap");
     auto gameState = GameState();
     game.setGameState(gameState);
 
